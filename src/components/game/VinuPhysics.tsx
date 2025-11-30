@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 import { ORBS, GAME_WIDTH, GAME_HEIGHT, WALL_THICKNESS } from '@/lib/constants';
 import { useGameStore } from '@/store/gameStore';
+import { useGameEconomy } from '@/hooks/useGameEconomy';
 
 export const VinuPhysics: React.FC = () => {
     const sceneRef = useRef<HTMLDivElement>(null);
     const engineRef = useRef<Matter.Engine | null>(null);
     const renderRef = useRef<Matter.Render | null>(null);
     const runnerRef = useRef<Matter.Runner | null>(null);
+
+    const { useBlast } = useGameEconomy();
 
     const {
         addScore,
@@ -281,6 +284,7 @@ export const VinuPhysics: React.FC = () => {
                     const bodyToRemove = clickedBodies[0];
                     if (bodyToRemove.label.startsWith('orb-')) {
                         Matter.Composite.remove(engineRef.current.world, bodyToRemove);
+                        useBlast(); // Consume the blast
                         setTargetingMode(false); // Disable after use
                     }
                 }
@@ -346,6 +350,7 @@ export const VinuPhysics: React.FC = () => {
                     const bodyToRemove = clickedBodies[0];
                     if (bodyToRemove.label.startsWith('orb-')) {
                         Matter.Composite.remove(engineRef.current.world, bodyToRemove);
+                        useBlast(); // Consume the blast
                         setTargetingMode(false); // Disable after use
                     }
                 }

@@ -1,14 +1,21 @@
-import React, { useEffect } from 'react';
-import { ShoppingBag, Zap, Crosshair, Flame } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShoppingBag, Zap, Crosshair, Flame, Loader2 } from 'lucide-react';
 import { useGameStore } from '@/store/gameStore';
 import { useGameEconomy } from '@/hooks/useGameEconomy';
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import { client } from '@/lib/thirdweb';
+import { ConnectButton, useActiveAccount, useSendTransaction } from "thirdweb/react";
+import { prepareTransaction, toWei } from "thirdweb";
+import { client, vinuChain as chain } from '@/lib/thirdweb';
+
+// Placeholder Treasury Address - Replace with actual address
+const TREASURY_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
 export const ShopPanel: React.FC = () => {
     const { currentScore, isGameOver, targetingMode, setTargetingMode } = useGameStore();
     const { freeShakes, freeBlasts, extraShakes, extraBlasts, useShake, addExtraShakes, useBlast, addExtraBlasts, checkDailyRewards, syncWithDb } = useGameEconomy();
     const account = useActiveAccount();
+
+    const { mutate: sendTransaction, isPending } = useSendTransaction();
+    const [purchasingItem, setPurchasingItem] = useState<string | null>(null);
 
     useEffect(() => {
         checkDailyRewards();
@@ -17,22 +24,57 @@ export const ShopPanel: React.FC = () => {
         }
     }, [account, checkDailyRewards, syncWithDb]);
 
-    const handleBuyShakePack = () => {
-        // Mock payment for now
-        if (confirm("Pay 200 VC for 5 Shakes?")) {
-            addExtraShakes(5);
+    const handlePurchase = async (item: string, cost: string, onSuccess: () => void) => {
+        if (!account) {
+            alert("Please connect your wallet first!");
+            return;
         }
+
+        setPurchasingItem(item);
+
+        try {
+            const transaction = prepareTransaction({
+                to: TREASURY_ADDRESS,
+                chain: chain,
+                client: client,
+                value: toWei(cost), // Cost in VC (ETH/Native token)
+            });
+
+            sendTransaction(transaction, {
+                onSuccess: () => {
+                    onSuccess();
+                    setPurchasingItem(null);
+                    alert(`Successfully purchased ${item}!`);
+                },
+                onError: (error) => {
+                    console.error("Transaction failed:", error);
+                    alert("Transaction failed. Please try again.");
+                    setPurchasingItem(null);
+                }
+            });
+        } catch (e) {
+            console.error("Error preparing transaction:", e);
+            setPurchasingItem(null);
+        }
+    };
+
+    const handleBuyShakePack = () => {
+        handlePurchase("Shake Pack", "200", () => addExtraShakes(5));
+    };
+
+    const handleBuyStrikePack = () => {
+        handlePurchase("Strike Pack", "400", () => addExtraBlasts(2));
+    };
+
+    const handleRevive = () => {
+        handlePurchase("Revive", "1000", () => {
+            window.dispatchEvent(new CustomEvent('powerup-revive'));
+        });
     };
 
     const handleUseShake = () => {
         if (useShake()) {
             window.dispatchEvent(new CustomEvent('powerup-shake'));
-        }
-    };
-
-    const handleBuyStrikePack = () => {
-        if (confirm("Pay 400 VC for 2 Precision Strikes?")) {
-            addExtraBlasts(2);
         }
     };
 
@@ -48,13 +90,6 @@ export const ShopPanel: React.FC = () => {
         } else {
             // Disable
             setTargetingMode(false);
-        }
-    };
-
-    const handleRevive = () => {
-        // Revive is always paid (premium)
-        if (confirm("Pay 1000 VC to Revive?")) {
-            window.dispatchEvent(new CustomEvent('powerup-revive'));
         }
     };
 
@@ -88,8 +123,10 @@ export const ShopPanel: React.FC = () => {
                         </div>
                         <button
                             onClick={handleBuyShakePack}
-                            className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold rounded-lg transition-colors"
+                            disabled={isPending && purchasingItem === "Shake Pack"}
+                            className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2"
                         >
+                            {isPending && purchasingItem === "Shake Pack" ? <Loader2 size={12} className="animate-spin" /> : null}
                             200 VC
                         </button>
                     </div>
@@ -123,8 +160,10 @@ export const ShopPanel: React.FC = () => {
                         </div>
                         <button
                             onClick={handleBuyStrikePack}
-                            className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold rounded-lg transition-colors"
+                            disabled={isPending && purchasingItem === "Strike Pack"}
+                            className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2"
                         >
+                            {isPending && purchasingItem === "Strike Pack" ? <Loader2 size={12} className="animate-spin" /> : null}
                             400 VC
                         </button>
                     </div>
@@ -148,7 +187,7 @@ export const ShopPanel: React.FC = () => {
                 {/* Revive */}
                 <button
                     onClick={handleRevive}
-                    disabled={!isGameOver}
+                    disabled={!isGameOver || (isPending && purchasingItem === "Revive")}
                     className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 hover:border-sky-500/50 transition-all group disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                     <div className="flex items-center gap-3">
@@ -160,7 +199,10 @@ export const ShopPanel: React.FC = () => {
                             <div className="text-xs text-slate-500">Remove top 3</div>
                         </div>
                     </div>
-                    <div className="text-sky-400 font-mono text-sm">1000 VC</div>
+                    <div className="text-sky-400 font-mono text-sm flex items-center gap-2">
+                        {isPending && purchasingItem === "Revive" ? <Loader2 size={12} className="animate-spin" /> : null}
+                        1000 VC
+                    </div>
                 </button>
 
             </div>
