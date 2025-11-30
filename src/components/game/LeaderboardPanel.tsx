@@ -45,12 +45,23 @@ export const LeaderboardPanel: React.FC = () => {
       if (error) {
         console.error("Error fetching leaderboard:", error);
       } else if (scores) {
-        const formattedData = scores.map((s, index) => ({
-          rank: index + 1,
-          name: s.player_name || "Unknown",
-          score: s.score,
-          timePlayed: "-" // We might not have this in DB yet
-        }));
+        const formattedData = scores.map((s, index) => {
+          let displayName = s.player_name;
+          if (!displayName || displayName === "Player" || displayName === "Unknown") {
+            // Fallback to abbreviated wallet
+            if (s.wallet_address) {
+              displayName = `${s.wallet_address.slice(0, 4)}...${s.wallet_address.slice(-4)}`;
+            } else {
+              displayName = "Unknown";
+            }
+          }
+          return {
+            rank: index + 1,
+            name: displayName,
+            score: s.score,
+            timePlayed: "-"
+          };
+        });
         setData(formattedData);
       }
       setLoading(false);

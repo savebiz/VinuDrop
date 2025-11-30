@@ -13,12 +13,16 @@ import { PauseOverlay } from '@/components/game/PauseOverlay';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { Toast } from '@/components/ui/Toast';
-import { Pause, Play } from 'lucide-react';
+import { UsernameModal } from '@/components/ui/UsernameModal';
+import { useGameEconomy } from '@/hooks/useGameEconomy';
+import { UserPen, Pause, Play } from 'lucide-react';
 import { useActiveAccount } from "thirdweb/react";
 
 export default function GamePage() {
     const { isPaused, togglePause, setGameOver, resetGame, resetKey, isGameOver, currentScore } = useGameStore();
+    const { username, setUsername } = useGameEconomy();
     const [showEndGameModal, setShowEndGameModal] = useState(false);
+    const [showUsernameModal, setShowUsernameModal] = useState(false);
     const account = useActiveAccount();
     const [isMounted, setIsMounted] = useState(false);
     const [showBiometricToast, setShowBiometricToast] = useState(false);
@@ -54,7 +58,7 @@ export default function GamePage() {
                     body: JSON.stringify({
                         walletAddress: account.address,
                         score: currentScore,
-                        playerName: "Player" // Could add a name input later
+                        playerName: username || "Player"
                     })
                 });
             } catch (e) {
@@ -86,6 +90,13 @@ export default function GamePage() {
         <main className="min-h-screen w-full flex items-center justify-center p-4 lg:p-8 overflow-hidden relative transition-colors duration-500">
             {!account && <LoginScreen />}
 
+            <UsernameModal
+                isOpen={showUsernameModal}
+                currentName={username || ''}
+                onSave={setUsername}
+                onClose={() => setShowUsernameModal(false)}
+            />
+
             {showBiometricToast && (
                 <Toast
                     message="Enable FaceID for faster login next time?"
@@ -105,6 +116,15 @@ export default function GamePage() {
 
             {/* Header Controls */}
             <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+                {account && (
+                    <button
+                        onClick={() => setShowUsernameModal(true)}
+                        className="flex items-center gap-2 px-3 py-2 glass-panel rounded-full hover:bg-white/10 transition-colors text-white text-sm font-medium"
+                    >
+                        <UserPen size={16} />
+                        {username || "Set Name"}
+                    </button>
+                )}
                 <button
                     onClick={togglePause}
                     className="p-3 glass-panel rounded-full hover:bg-white/10 transition-colors text-white"

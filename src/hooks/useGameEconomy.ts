@@ -13,6 +13,7 @@ interface EconomyState {
     extraShakes: number; // Purchased shakes
     extraBlasts: number; // Purchased blasts
     lastDailyClaim: number | null; // Timestamp
+    username?: string;
 
     // Actions
     useShake: () => boolean; // Uses free first, then extra
@@ -22,6 +23,7 @@ interface EconomyState {
     useFreeBlast: () => boolean; // Deprecated, kept for compatibility if needed, but useBlast is preferred
     checkDailyRewards: () => void;
     syncWithDb: (walletAddress: string) => Promise<void>;
+    setUsername: (name: string) => void;
 }
 
 export const useGameEconomy = create<EconomyState>()(
@@ -110,6 +112,13 @@ export const useGameEconomy = create<EconomyState>()(
                 if (data) {
                     const lastClaim = new Date(data.last_daily_claim).getTime();
 
+                    // Sync username if exists in DB (optional, if we want cross-device sync)
+                    // For now, we prioritize local, or we could sync. Let's sync if local is empty.
+                    const { username } = get();
+                    if (!username && data.username) {
+                        set({ username: data.username });
+                    }
+
                     if (now - lastClaim > oneDay) {
                         // It's been more than 24h since last DB claim. Reset everything.
                         set({
@@ -122,7 +131,8 @@ export const useGameEconomy = create<EconomyState>()(
                             wallet_address: walletAddress,
                             last_daily_claim: new Date().toISOString(),
                             free_shakes: 1,
-                            free_blasts: 1
+                            free_blasts: 1,
+                            username: username || data.username // Persist username
                         });
                     } else {
                         // Less than 24h. Sync local with DB values (which track remaining freebies).
@@ -134,11 +144,13 @@ export const useGameEconomy = create<EconomyState>()(
                     }
                 } else {
                     // New user, insert default
+                    const { username } = get();
                     await supabase.from('users').insert({
                         wallet_address: walletAddress,
                         last_daily_claim: new Date().toISOString(),
                         free_shakes: 1,
-                        free_blasts: 1
+                        free_blasts: 1,
+                        username: username || null
                     });
                     set({
                         freeShakes: 1,
@@ -146,7 +158,8 @@ export const useGameEconomy = create<EconomyState>()(
                         lastDailyClaim: Date.now()
                     });
                 }
-            }
+            },
+            setUsername: (name: string) => set({ username: name }),
         }),
         {
             name: 'vinudrop-economy',
