@@ -1,0 +1,55 @@
+import React from 'react';
+import { ORBS } from '@/lib/constants';
+import { motion } from 'framer-motion';
+import { useGameStore } from '@/store/gameStore';
+
+export const EvolutionCircle: React.FC = () => {
+    const { lastMergedLevel } = useGameStore();
+    const radius = 120; // Radius of the circle arrangement
+    const center = 150; // Center of the SVG
+
+    return (
+        <div className="glass-panel p-6 rounded-2xl w-full max-w-xs mx-auto mt-4 flex flex-col items-center">
+            <h3 className="text-sky-300 text-sm uppercase tracking-widest mb-4">Evolution</h3>
+            <div className="relative w-[300px] h-[300px]">
+                <svg width="300" height="300" className="absolute top-0 left-0 pointer-events-none">
+                    <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 4" />
+                </svg>
+
+                {ORBS.map((orb, index) => {
+                    const angle = (index / ORBS.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+                    const x = center + radius * Math.cos(angle);
+                    const y = center + radius * Math.sin(angle);
+                    const isHighlighted = lastMergedLevel === orb.level;
+
+                    return (
+                        <motion.div
+                            key={orb.level}
+                            className="absolute flex items-center justify-center rounded-full"
+                            style={{
+                                left: x,
+                                top: y,
+                                width: 30, // Fixed size for display
+                                height: 30,
+                                marginLeft: -15,
+                                marginTop: -15,
+                                background: orb.color,
+                                zIndex: 10,
+                                boxShadow: isHighlighted ? '0 0 20px 5px rgba(255,255,255,0.6)' : '0 0 5px rgba(0,0,0,0.5)',
+                                border: isHighlighted ? '2px solid white' : '1px solid rgba(255,255,255,0.2)'
+                            }}
+                            animate={{
+                                scale: isHighlighted ? 1.5 : 1,
+                            }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                            <span className="text-[10px] font-bold text-white drop-shadow-md pointer-events-none">
+                                {orb.level}
+                            </span>
+                        </motion.div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-fredoka);
+
+  --color-cosmic-bg: #020617;
+  /* slate-950 */
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-bg: rgba(255, 255, 255, 0.05);
+  --color-reactor-glow: rgba(56, 189, 248, 0.5);
+  /* sky-400 */
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode (Professional Sky) */
+    --bg-primary: #f0f9ff;
+    /* sky-50 - subtle tint */
+    --bg-secondary: #e0f2fe;
+    /* sky-100 */
+    --text-primary: #020617;
+    /* slate-950 - sharper black */
+    --text-secondary: #334155;
+    /* slate-700 - darker gray for readability */
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    /* High opacity for distinct panels */
+    --glass-border: rgba(186, 230, 253, 1);
+    /* sky-200 - solid border */
+    --accent-glow: rgba(14, 165, 233, 0.4);
+    /* sky-500 */
+    --panel-bg: rgba(255, 255, 255, 0.95);
+    /* Nearly opaque for content panels */
+    --shadow-color: rgba(14, 165, 233, 0.15);
+    /* Colored shadow for depth */
+  }
+
+  .dark {
+    /* Dark Mode (Deep Cosmic) */
+    --bg-primary: #020617;
+    /* slate-950 */
+    --bg-secondary: #0f172a;
+    /* slate-900 */
+    --text-primary: #f8fafc;
+    /* slate-50 */
+    --text-secondary: #94a3b8;
+    /* slate-400 */
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(56, 189, 248, 0.3);
+    /* sky-400 */
+    --accent-glow: rgba(56, 189, 248, 0.15);
+    --panel-bg: rgba(30, 41, 59, 0.6);
+    --shadow-color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply backdrop-blur-md border border-[var(--glass-border)] transition-colors duration-300;
+    background: var(--panel-bg);
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+  }
+
+  .reactor-core {
+    @apply backdrop-blur-sm border-x-4 border-b-4 border-[var(--glass-border)] transition-colors duration-300;
+    background: var(--glass-bg);
+    box-shadow: 0 0 50px var(--accent-glow);
+  }
+}
