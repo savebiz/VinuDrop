@@ -21,6 +21,7 @@ interface GameState {
     // Pause & Persistence
     isPaused: boolean;
     savedBoardState: { x: number; y: number; level: number; id: number; velocity: { x: number; y: number } }[];
+    resetKey: number;
 
     // Actions
     nextTurn: () => void;
@@ -66,6 +67,7 @@ export const useGameStore = create<GameState>()(
             // Pause & Persistence Initial State
             isPaused: false,
             savedBoardState: [],
+            resetKey: 0,
 
             nextTurn: () => set((state) => ({
                 currentOrbLevel: state.nextOrbLevel,
@@ -84,7 +86,7 @@ export const useGameStore = create<GameState>()(
 
             setLastMerged: (level) => set({ lastMergedLevel: level }),
 
-            resetGame: () => set({
+            resetGame: () => set((state) => ({
                 currentScore: 0,
                 isGameOver: false,
                 currentOrbLevel: 1,
@@ -97,7 +99,8 @@ export const useGameStore = create<GameState>()(
                 targetingMode: false,
                 isPaused: false,
                 savedBoardState: [],
-            }),
+                resetKey: state.resetKey + 1 // Increment to force re-render
+            })),
 
             addScore: (points) => set((state) => ({ currentScore: state.currentScore + points })),
 

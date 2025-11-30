@@ -7,7 +7,7 @@ import { client } from '@/lib/thirdweb';
 
 export const ShopPanel: React.FC = () => {
     const { currentScore, isGameOver, targetingMode, setTargetingMode } = useGameStore();
-    const { freeShakes, freeBlasts, extraShakes, useShake, addExtraShakes, useFreeBlast, checkDailyRewards, syncWithDb } = useGameEconomy();
+    const { freeShakes, freeBlasts, extraShakes, extraBlasts, useShake, addExtraShakes, useBlast, addExtraBlasts, checkDailyRewards, syncWithDb } = useGameEconomy();
     const account = useActiveAccount();
 
     useEffect(() => {
@@ -30,13 +30,24 @@ export const ShopPanel: React.FC = () => {
         }
     };
 
+    const handleBuyStrikePack = () => {
+        if (confirm("Pay 400 VC for 2 Precision Strikes?")) {
+            addExtraBlasts(2);
+        }
+    };
+
     const handlePrecisionStrike = () => {
-        if (useFreeBlast()) {
-            setTargetingMode(!targetingMode);
-        } else {
-            if (confirm("Pay 400 VC for Precision Strike?")) {
-                setTargetingMode(!targetingMode);
+        if (!targetingMode) {
+            // Trying to enable
+            if (freeBlasts > 0 || extraBlasts > 0) {
+                setTargetingMode(true);
+            } else {
+                // No charges, prompt to buy
+                handleBuyStrikePack();
             }
+        } else {
+            // Disable
+            setTargetingMode(false);
         }
     };
 
@@ -98,31 +109,41 @@ export const ShopPanel: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Precision Strike */}
-                <button
-                    onClick={handlePrecisionStrike}
-                    disabled={isGameOver}
-                    className={`flex items-center justify-between p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border transition-all group disabled:opacity-50 disabled:cursor-not-allowed
-            ${targetingMode ? 'border-red-500 bg-red-900/20' : 'border-slate-700 hover:border-sky-500/50'}
-          `}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-red-500/20 text-red-400 group-hover:scale-110 transition-transform">
-                            <Crosshair size={20} />
+                {/* Precision Strike Pack */}
+                <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-800/50 border border-slate-700">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-red-500/20 text-red-400">
+                                <Crosshair size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="text-slate-200 font-bold text-sm">Strike Pack</div>
+                                <div className="text-xs text-slate-500">Get 2 Strikes</div>
+                            </div>
                         </div>
-                        <div className="text-left">
-                            <div className="text-slate-200 font-bold text-sm">Strike</div>
-                            <div className="text-xs text-slate-500">Remove one orb</div>
-                        </div>
+                        <button
+                            onClick={handleBuyStrikePack}
+                            className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold rounded-lg transition-colors"
+                        >
+                            400 VC
+                        </button>
                     </div>
-                    <div className="text-right">
-                        {freeBlasts > 0 ? (
-                            <span className="text-green-400 font-bold text-xs bg-green-900/30 px-2 py-1 rounded-full">FREE ({freeBlasts})</span>
-                        ) : (
-                            <div className="text-sky-400 font-mono text-sm">400 VC</div>
+
+                    <button
+                        onClick={handlePrecisionStrike}
+                        disabled={isGameOver || (freeBlasts === 0 && extraBlasts === 0)}
+                        className={`w-full mt-2 py-2 text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed
+                            ${targetingMode ? 'bg-red-600 hover:bg-red-500 animate-pulse' : 'bg-slate-700 hover:bg-slate-600'}
+                        `}
+                    >
+                        {targetingMode ? 'CANCEL STRIKE' : 'ACTIVATE STRIKE'}
+                        {(freeBlasts > 0 || extraBlasts > 0) && (
+                            <span className="bg-slate-900/50 px-2 py-0.5 rounded-full text-xs">
+                                {freeBlasts + extraBlasts} Left
+                            </span>
                         )}
-                    </div>
-                </button>
+                    </button>
+                </div>
 
                 {/* Revive */}
                 <button

@@ -11,12 +11,15 @@ interface EconomyState {
     freeShakes: number;
     freeBlasts: number;
     extraShakes: number; // Purchased shakes
+    extraBlasts: number; // Purchased blasts
     lastDailyClaim: number | null; // Timestamp
 
     // Actions
     useShake: () => boolean; // Uses free first, then extra
     addExtraShakes: (amount: number) => void;
-    useFreeBlast: () => boolean;
+    useBlast: () => boolean; // Uses free first, then extra
+    addExtraBlasts: (amount: number) => void;
+    useFreeBlast: () => boolean; // Deprecated, kept for compatibility if needed, but useBlast is preferred
     checkDailyRewards: () => void;
     syncWithDb: (walletAddress: string) => Promise<void>;
 }
@@ -27,6 +30,7 @@ export const useGameEconomy = create<EconomyState>()(
             freeShakes: 1,
             freeBlasts: 1,
             extraShakes: 0,
+            extraBlasts: 0,
             lastDailyClaim: null,
 
             useShake: () => {
@@ -43,6 +47,22 @@ export const useGameEconomy = create<EconomyState>()(
 
             addExtraShakes: (amount) => {
                 set((state) => ({ extraShakes: state.extraShakes + amount }));
+            },
+
+            useBlast: () => {
+                const { freeBlasts, extraBlasts } = get();
+                if (freeBlasts > 0) {
+                    set({ freeBlasts: freeBlasts - 1 });
+                    return true;
+                } else if (extraBlasts > 0) {
+                    set({ extraBlasts: extraBlasts - 1 });
+                    return true;
+                }
+                return false;
+            },
+
+            addExtraBlasts: (amount) => {
+                set((state) => ({ extraBlasts: state.extraBlasts + amount }));
             },
 
             useFreeBlast: () => {

@@ -17,7 +17,7 @@ import { Pause, Play } from 'lucide-react';
 import { useActiveAccount } from "thirdweb/react";
 
 export default function GamePage() {
-    const { isPaused, togglePause, setGameOver, resetGame } = useGameStore();
+    const { isPaused, togglePause, setGameOver, resetGame, resetKey } = useGameStore();
     const [showEndGameModal, setShowEndGameModal] = useState(false);
     const account = useActiveAccount();
     const [isMounted, setIsMounted] = useState(false);
@@ -29,13 +29,21 @@ export default function GamePage() {
 
     useEffect(() => {
         if (account) {
-            // Show toast after a short delay if user is logged in
-            const timer = setTimeout(() => {
-                setShowBiometricToast(true);
-            }, 2000);
-            return () => clearTimeout(timer);
+            // Check session storage to see if we already showed it
+            const hasShown = sessionStorage.getItem('biometric_toast_shown');
+            if (!hasShown) {
+                const timer = setTimeout(() => {
+                    setShowBiometricToast(true);
+                }, 2000);
+                return () => clearTimeout(timer);
+            }
         }
     }, [account]);
+
+    const handleCloseToast = () => {
+        setShowBiometricToast(false);
+        sessionStorage.setItem('biometric_toast_shown', 'true');
+    };
 
     const handleEndGame = () => {
         setShowEndGameModal(true);
@@ -59,9 +67,8 @@ export default function GamePage() {
             }
         }
 
-        setGameOver(true);
+        resetGame(); // Reset game state (score, time, etc)
         setShowEndGameModal(false);
-        if (isPaused) togglePause(); // Unpause to show game over screen
     };
 
     if (!isMounted) return null; // Prevent hydration mismatch
@@ -77,9 +84,9 @@ export default function GamePage() {
                     onAction={() => {
                         // Trigger passkey flow (mock for now as SDK handles it in connect)
                         alert("Passkey registration would start here.");
-                        setShowBiometricToast(false);
+                        handleCloseToast();
                     }}
-                    onClose={() => setShowBiometricToast(false)}
+                    onClose={handleCloseToast}
                 />
             )}
 
@@ -113,8 +120,8 @@ export default function GamePage() {
                         <ScorePanel />
                     </div>
 
-                    <div className="relative reactor-core rounded-b-[3rem] p-1 shadow-[0_0_50px_rgba(56,189,248,0.1)] origin-top scale-[0.8] sm:scale-90 md:scale-100 lg:scale-100 xl:scale-110 transition-transform">
-                        <VinuPhysics />
+                    <div className="relative reactor-core rounded-b-[3rem] p-1 shadow-[0_0_50px_rgba(56,189,248,0.1)] origin-top scale-[0.85] sm:scale-90 md:scale-100 lg:scale-100 xl:scale-110 transition-transform">
+                        <VinuPhysics key={resetKey} />
                         {isPaused && (
                             <PauseOverlay
                                 onResume={togglePause}
