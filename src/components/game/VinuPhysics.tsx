@@ -313,6 +313,71 @@ export const VinuPhysics: React.FC = () => {
         setTimeout(() => setCanDrop(true), 500);
     };
 
+    // Touch Control
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (isGameOver) return;
+        const rect = sceneRef.current?.getBoundingClientRect();
+        if (rect && e.touches[0]) {
+            const x = e.touches[0].clientX - rect.left;
+            // Clamp to bounds
+            const clampedX = Math.max(WALL_THICKNESS, Math.min(x, GAME_WIDTH - WALL_THICKNESS));
+            setSpawnerX(clampedX);
+        }
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        // Prevent default to stop double-firing with click if browser emulates it
+        // e.preventDefault(); // Optional, but might block scrolling. Better to just handle logic.
+
+        if (!engineRef.current) return;
+
+        // Precision Strike Logic for Touch
+        if (targetingMode) {
+            const rect = sceneRef.current?.getBoundingClientRect();
+            // For touch end, we use changedTouches
+            if (rect && e.changedTouches[0]) {
+                const x = e.changedTouches[0].clientX - rect.left;
+                const y = e.changedTouches[0].clientY - rect.top;
+
+                const bodies = Matter.Composite.allBodies(engineRef.current.world);
+                const clickedBodies = Matter.Query.point(bodies, { x, y });
+
+                if (clickedBodies.length > 0) {
+                    const bodyToRemove = clickedBodies[0];
+                    if (bodyToRemove.label.startsWith('orb-')) {
+                        Matter.Composite.remove(engineRef.current.world, bodyToRemove);
+                        setTargetingMode(false); // Disable after use
+                    }
+                }
+            }
+            return;
+        }
+
+        if (isGameOver || !canDrop) return;
+
+        setCanDrop(false);
+
+        // Spawn CURRENT orb
+        const orbInfo = ORBS.find(o => o.level === currentOrbLevel) || ORBS[0];
+
+        const body = Matter.Bodies.circle(spawnerX, 50, orbInfo.radius, {
+            restitution: 0.3,
+            friction: 0.1,
+            label: `orb-${orbInfo.level}`,
+            render: {
+                fillStyle: orbInfo.solidColor
+            }
+        });
+
+        Matter.Composite.add(engineRef.current.world, body);
+
+        // Prepare next turn (Current <- Next, Next <- Random)
+        nextTurn();
+
+        // Cooldown
+        setTimeout(() => setCanDrop(true), 500);
+    };
+
     return (
         <div className="relative mx-auto" style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}>
             {/* Glass Container Overlay */}
@@ -352,7 +417,9 @@ export const VinuPhysics: React.FC = () => {
                 ref={sceneRef}
                 onMouseMove={handleMouseMove}
                 onClick={handleClick}
-                className={`absolute inset - 0 z - 10 ${targetingMode ? 'cursor-crosshair' : 'cursor-none'} `}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className={`absolute inset-0 z-10 ${targetingMode ? 'cursor-crosshair' : 'cursor-none'}`}
             />
 
             {isGameOver && (
