@@ -17,7 +17,7 @@ import { Pause, Play } from 'lucide-react';
 import { useActiveAccount } from "thirdweb/react";
 
 export default function GamePage() {
-    const { isPaused, togglePause, setGameOver, resetGame, resetKey } = useGameStore();
+    const { isPaused, togglePause, setGameOver, resetGame, resetKey, isGameOver, currentScore } = useGameStore();
     const [showEndGameModal, setShowEndGameModal] = useState(false);
     const account = useActiveAccount();
     const [isMounted, setIsMounted] = useState(false);
@@ -45,20 +45,15 @@ export default function GamePage() {
         sessionStorage.setItem('biometric_toast_shown', 'true');
     };
 
-    const handleEndGame = () => {
-        setShowEndGameModal(true);
-    };
-
-    const confirmEndGame = async () => {
-        // Submit score before ending
-        if (account) {
+    const submitScore = async () => {
+        if (account && currentScore > 0) {
             try {
                 await fetch('/api/submit-score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         walletAddress: account.address,
-                        score: useGameStore.getState().currentScore,
+                        score: currentScore,
                         playerName: "Player" // Could add a name input later
                     })
                 });
@@ -66,7 +61,21 @@ export default function GamePage() {
                 console.error("Failed to save score:", e);
             }
         }
+    };
 
+    // Auto-submit score on Game Over
+    useEffect(() => {
+        if (isGameOver) {
+            submitScore();
+        }
+    }, [isGameOver]);
+
+    const handleEndGame = () => {
+        setShowEndGameModal(true);
+    };
+
+    const confirmEndGame = async () => {
+        await submitScore();
         resetGame(); // Reset game state (score, time, etc)
         setShowEndGameModal(false);
     };

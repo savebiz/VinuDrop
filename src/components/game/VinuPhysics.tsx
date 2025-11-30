@@ -27,7 +27,8 @@ export const VinuPhysics: React.FC = () => {
         setTargetingMode,
         isPaused,
         saveBoard,
-        savedBoardState
+        savedBoardState,
+        currentScore
     } = useGameStore();
 
     // Local state for the spawner position (visual only)
@@ -431,10 +432,10 @@ export const VinuPhysics: React.FC = () => {
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
                     <div className="text-center">
                         <h2 className="text-4xl font-bold text-white mb-4">Game Over</h2>
-                        <div className="text-xl text-sky-300 mb-8">Score: {useGameStore.getState().currentScore}</div>
+                        <div className="text-xl text-sky-300 mb-8">Score: {currentScore}</div>
                         <button
                             onClick={() => {
-                                window.location.reload();
+                                resetGame();
                             }}
                             className="px-6 py-3 bg-sky-500 hover:bg-sky-400 text-white rounded-full font-bold transition-colors shadow-[0_0_20px_rgba(56,189,248,0.5)]"
                         >
