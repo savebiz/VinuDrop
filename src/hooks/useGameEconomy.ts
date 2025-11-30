@@ -10,10 +10,12 @@ const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supaba
 interface EconomyState {
     freeShakes: number;
     freeBlasts: number;
+    extraShakes: number; // Purchased shakes
     lastDailyClaim: number | null; // Timestamp
 
     // Actions
-    useFreeShake: () => boolean;
+    useShake: () => boolean; // Uses free first, then extra
+    addExtraShakes: (amount: number) => void;
     useFreeBlast: () => boolean;
     checkDailyRewards: () => void;
     syncWithDb: (walletAddress: string) => Promise<void>;
@@ -24,15 +26,23 @@ export const useGameEconomy = create<EconomyState>()(
         (set, get) => ({
             freeShakes: 1,
             freeBlasts: 1,
+            extraShakes: 0,
             lastDailyClaim: null,
 
-            useFreeShake: () => {
-                const { freeShakes } = get();
+            useShake: () => {
+                const { freeShakes, extraShakes } = get();
                 if (freeShakes > 0) {
                     set({ freeShakes: freeShakes - 1 });
                     return true;
+                } else if (extraShakes > 0) {
+                    set({ extraShakes: extraShakes - 1 });
+                    return true;
                 }
                 return false;
+            },
+
+            addExtraShakes: (amount) => {
+                set((state) => ({ extraShakes: state.extraShakes + amount }));
             },
 
             useFreeBlast: () => {
@@ -74,20 +84,20 @@ export const useGameEconomy = create<EconomyState>()(
                     return;
                 }
 
+                const now = Date.now();
+                const oneDay = 24 * 60 * 60 * 1000;
+
                 if (data) {
-                    // Sync logic: prioritize DB or local? 
-                    // For simplicity, if DB says last claim was > 24h ago, we reset locally too.
                     const lastClaim = new Date(data.last_daily_claim).getTime();
-                    const now = Date.now();
-                    const oneDay = 24 * 60 * 60 * 1000;
 
                     if (now - lastClaim > oneDay) {
+                        // It's been more than 24h since last DB claim. Reset everything.
                         set({
                             freeShakes: 1,
                             freeBlasts: 1,
                             lastDailyClaim: now
                         });
-                        // Update DB
+                        // Update DB with new claim time and reset counts
                         await supabase.from('users').upsert({
                             wallet_address: walletAddress,
                             last_daily_claim: new Date().toISOString(),
@@ -95,7 +105,7 @@ export const useGameEconomy = create<EconomyState>()(
                             free_blasts: 1
                         });
                     } else {
-                        // Sync local with DB values if DB is more recent/authoritative
+                        // Less than 24h. Sync local with DB values (which track remaining freebies).
                         set({
                             freeShakes: data.free_shakes,
                             freeBlasts: data.free_blasts,

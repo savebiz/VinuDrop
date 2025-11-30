@@ -7,7 +7,7 @@ import { client } from '@/lib/thirdweb';
 
 export const ShopPanel: React.FC = () => {
     const { currentScore, isGameOver, targetingMode, setTargetingMode } = useGameStore();
-    const { freeShakes, freeBlasts, useFreeShake, useFreeBlast, checkDailyRewards, syncWithDb } = useGameEconomy();
+    const { freeShakes, freeBlasts, extraShakes, useShake, addExtraShakes, useFreeBlast, checkDailyRewards, syncWithDb } = useGameEconomy();
     const account = useActiveAccount();
 
     useEffect(() => {
@@ -17,15 +17,16 @@ export const ShopPanel: React.FC = () => {
         }
     }, [account, checkDailyRewards, syncWithDb]);
 
-    // Mock purchase functions for now
-    const handleShake = () => {
-        if (useFreeShake()) {
+    const handleBuyShakePack = () => {
+        // Mock payment for now
+        if (confirm("Pay 200 VC for 5 Shakes?")) {
+            addExtraShakes(5);
+        }
+    };
+
+    const handleUseShake = () => {
+        if (useShake()) {
             window.dispatchEvent(new CustomEvent('powerup-shake'));
-        } else {
-            // Fallback to VC payment (mock)
-            if (confirm("Pay 200 VC for Shake?")) {
-                window.dispatchEvent(new CustomEvent('powerup-shake'));
-            }
         }
     };
 
@@ -62,29 +63,40 @@ export const ShopPanel: React.FC = () => {
 
             <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-grow">
 
-                {/* Shake */}
-                <button
-                    onClick={handleShake}
-                    disabled={isGameOver}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 hover:border-sky-500/50 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-yellow-500/20 text-yellow-400 group-hover:scale-110 transition-transform">
-                            <Zap size={20} />
+                {/* Shake Pack */}
+                <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-800/50 border border-slate-700">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-yellow-500/20 text-yellow-400">
+                                <Zap size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="text-slate-200 font-bold text-sm">Shake Pack</div>
+                                <div className="text-xs text-slate-500">Get 5 Shakes</div>
+                            </div>
                         </div>
-                        <div className="text-left">
-                            <div className="text-slate-200 font-bold text-sm">Shake</div>
-                            <div className="text-xs text-slate-500">Unstuck orbs</div>
-                        </div>
+                        <button
+                            onClick={handleBuyShakePack}
+                            className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold rounded-lg transition-colors"
+                        >
+                            200 VC
+                        </button>
                     </div>
-                    <div className="text-right">
-                        {freeShakes > 0 ? (
-                            <span className="text-green-400 font-bold text-xs bg-green-900/30 px-2 py-1 rounded-full">FREE ({freeShakes})</span>
-                        ) : (
-                            <div className="text-sky-400 font-mono text-sm">200 VC</div>
+
+                    {/* Use Shake Button */}
+                    <button
+                        onClick={handleUseShake}
+                        disabled={isGameOver || (freeShakes === 0 && extraShakes === 0)}
+                        className="w-full mt-2 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                        Use Shake
+                        {(freeShakes > 0 || extraShakes > 0) && (
+                            <span className="bg-slate-900/50 px-2 py-0.5 rounded-full text-xs">
+                                {freeShakes + extraShakes} Left
+                            </span>
                         )}
-                    </div>
-                </button>
+                    </button>
+                </div>
 
                 {/* Precision Strike */}
                 <button

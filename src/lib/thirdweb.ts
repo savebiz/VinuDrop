@@ -1,5 +1,5 @@
 import { createThirdwebClient, defineChain } from "thirdweb";
-import { inAppWallet } from "thirdweb/wallets";
+import { inAppWallet, createWallet } from "thirdweb/wallets";
 
 export const client = createThirdwebClient({
     clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "87299389203928392039",
@@ -27,4 +27,7 @@ export const wallets = [
             ],
         },
     }),
+    createWallet("io.metamask"),
+    createWallet("com.coinbase.wallet"),
+    createWallet("me.rainbow"),
 ];

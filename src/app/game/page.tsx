@@ -41,7 +41,24 @@ export default function GamePage() {
         setShowEndGameModal(true);
     };
 
-    const confirmEndGame = () => {
+    const confirmEndGame = async () => {
+        // Submit score before ending
+        if (account) {
+            try {
+                await fetch('/api/submit-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        walletAddress: account.address,
+                        score: useGameStore.getState().currentScore,
+                        playerName: "Player" // Could add a name input later
+                    })
+                });
+            } catch (e) {
+                console.error("Failed to save score:", e);
+            }
+        }
+
         setGameOver(true);
         setShowEndGameModal(false);
         if (isPaused) togglePause(); // Unpause to show game over screen
@@ -119,7 +136,7 @@ export default function GamePage() {
                 isOpen={showEndGameModal}
                 title="End Game?"
                 message="Are you sure you want to end the current game? Your progress will be lost."
-                confirmText="End Game"
+                confirmText="Save & End Game"
                 cancelText="Return to Game"
                 isDestructive={true}
                 onConfirm={confirmEndGame}
