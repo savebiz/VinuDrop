@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@supabase/supabase-js';
+import { getWalletBalance } from "thirdweb/wallets";
+import { client, vinuChain as chain } from '@/lib/thirdweb';
 
 // Initialize Supabase client (client-side)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,6 +16,7 @@ interface EconomyState {
     extraBlasts: number; // Purchased blasts
     lastDailyClaim: number | null; // Timestamp
     username?: string;
+    balance?: string; // VC Balance
 
     // Actions
     useShake: () => boolean; // Uses free first, then extra
@@ -34,6 +37,7 @@ export const useGameEconomy = create<EconomyState>()(
             extraShakes: 0,
             extraBlasts: 0,
             lastDailyClaim: null,
+            balance: '0',
 
             useShake: () => {
                 const { freeShakes, extraShakes } = get();
@@ -92,6 +96,18 @@ export const useGameEconomy = create<EconomyState>()(
             },
 
             syncWithDb: async (walletAddress: string) => {
+                // Fetch Balance
+                try {
+                    const balanceData = await getWalletBalance({
+                        address: walletAddress,
+                        client,
+                        chain,
+                    });
+                    set({ balance: balanceData.displayValue });
+                } catch (e) {
+                    console.error("Failed to fetch balance:", e);
+                }
+
                 if (!supabase) return;
 
                 // 1. Fetch user data

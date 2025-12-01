@@ -1,14 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Inter:wght@400..800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-fredoka);
+  --font-fredoka: 'Fredoka', sans-serif;
+  --font-inter: 'Inter', monospace;
 
-  --color-cosmic-bg: #020617;
-  /* slate-950 */
+  --color-cosmic-bg: #0B0B15;
   --color-glass-border: rgba(255, 255, 255, 0.1);
   --color-glass-bg: rgba(255, 255, 255, 0.05);
-  --color-reactor-glow: rgba(56, 189, 248, 0.5);
-  /* sky-400 */
+  --color-reactor-glow: rgba(0, 240, 255, 0.5);
 }
 
 @tailwind base;
@@ -17,62 +17,84 @@
 
 @layer base {
   :root {
-    /* Light Mode (Professional Sky) */
-    --bg-primary: #f0f9ff;
-    /* sky-50 - subtle tint */
-    --bg-secondary: #e0f2fe;
-    /* sky-100 */
-    --text-primary: #020617;
-    /* slate-950 - sharper black */
-    --text-secondary: #334155;
-    /* slate-700 - darker gray for readability */
-    --glass-bg: rgba(255, 255, 255, 0.9);
-    /* High opacity for distinct panels */
-    --glass-border: rgba(186, 230, 253, 1);
-    /* sky-200 - solid border */
-    --accent-glow: rgba(14, 165, 233, 0.4);
-    /* sky-500 */
-    --panel-bg: rgba(255, 255, 255, 0.95);
-    /* Nearly opaque for content panels */
-    --shadow-color: rgba(14, 165, 233, 0.15);
-    /* Colored shadow for depth */
+    /* VinuVerse Cosmic Glass Theme */
+    --bg-primary: #0B0B15;
+    --bg-secondary: #1A1A2E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #94A3B8;
+
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --accent-cyan: #00F0FF;
+    --accent-pink: #FF0099;
+    --accent-gold: #FFD700;
+
+    --panel-bg: rgba(255, 255, 255, 0.03);
+    --shadow-color: rgba(0, 0, 0, 0.5);
   }
 
+  /* Force Dark Mode for Cosmic Theme */
   .dark {
-    /* Dark Mode (Deep Cosmic) */
-    --bg-primary: #020617;
-    /* slate-950 */
-    --bg-secondary: #0f172a;
-    /* slate-900 */
-    --text-primary: #f8fafc;
-    /* slate-50 */
-    --text-secondary: #94a3b8;
-    /* slate-400 */
-    --glass-bg: rgba(15, 23, 42, 0.7);
-    --glass-border: rgba(56, 189, 248, 0.3);
-    /* sky-400 */
-    --accent-glow: rgba(56, 189, 248, 0.15);
-    --panel-bg: rgba(30, 41, 59, 0.6);
-    --shadow-color: rgba(0, 0, 0, 0.3);
+    --bg-primary: #0B0B15;
+    --bg-secondary: #1A1A2E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #94A3B8;
   }
 }
 
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-fredoka);
+  overflow-x: hidden;
 }
 
 @layer utilities {
-  .glass-panel {
-    @apply backdrop-blur-md border border-[var(--glass-border)] transition-colors duration-300;
-    background: var(--panel-bg);
-    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+  .glass-panel-cosmic {
+    @apply backdrop-blur-xl bg-white/60 border border-slate-200 shadow-xl shadow-indigo-100/50 text-slate-800 transition-all duration-300;
+    @apply dark:backdrop-blur-md dark:bg-white/5 dark:border-white/10 dark:shadow-none dark:text-white;
+    /* Custom shadow for dark mode only */
+    box-shadow: var(--shadow-light);
+  }
+
+  /* Helper for dark mode specific shadow */
+  :is(.dark .glass-panel-cosmic) {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   }
 
   .reactor-core {
-    @apply backdrop-blur-sm border-x-4 border-b-4 border-[var(--glass-border)] transition-colors duration-300;
-    background: var(--glass-bg);
-    box-shadow: 0 0 50px var(--accent-glow);
+    @apply backdrop-blur-sm border-x-4 border-b-4 transition-colors duration-300;
+    @apply border-slate-300 bg-slate-100/50 shadow-inner;
+    @apply dark:border-white/20 dark:bg-transparent dark:shadow-none;
+
+    /* Light mode specific background */
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+  }
+
+  :is(.dark .reactor-core) {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
+    box-shadow: 0 0 50px rgba(0, 240, 255, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05);
+  }
+
+  .text-neon {
+    @apply text-indigo-600 dark:text-white;
+    text-shadow: none;
+  }
+
+  :is(.dark .text-neon) {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+
+  .text-neon-pink {
+    @apply text-pink-600 dark:text-white;
+    text-shadow: none;
+  }
+
+  :is(.dark .text-neon-pink) {
+    text-shadow: 0 0 10px rgba(255, 0, 153, 0.5), 0 0 20px rgba(255, 0, 153, 0.3);
+  }
+
+  .arcade-button {
+    @apply relative border-b-4 active:border-b-0 active:translate-y-1 transition-all duration-75;
   }
 }

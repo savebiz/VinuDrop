@@ -24,3 +24,4 @@ export const ORBS: OrbType[] = [
 export const GAME_WIDTH = 500;
 export const GAME_HEIGHT = 700;
 export const WALL_THICKNESS = 50;
+export const DANGER_HEIGHT = 150;

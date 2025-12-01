@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Clock, Calendar, Globe } from 'lucide-react';
+import { Trophy, Clock, Calendar, Globe, Maximize2 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { useGameStore } from '@/store/gameStore';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,6 +18,7 @@ interface LeaderboardEntry {
 type TimeWindow = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export const LeaderboardPanel: React.FC = () => {
+  const { toggleLeaderboardModal } = useGameStore();
   const [activeTab, setActiveTab] = useState<TimeWindow>('daily');
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,8 +71,6 @@ export const LeaderboardPanel: React.FC = () => {
 
     fetchLeaderboard();
 
-    fetchLeaderboard();
-
     // Subscribe to changes for real-time updates
     if (supabase) {
       const channel = supabase
@@ -97,29 +97,42 @@ export const LeaderboardPanel: React.FC = () => {
   const currentPot = MOCK_POTS[activeTab];
 
   return (
-    <div className="glass-panel p-6 rounded-2xl w-full h-full min-h-[400px] flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+    <div className="glass-panel-cosmic p-6 rounded-3xl w-full h-full flex flex-col relative overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-yellow-500/20 rounded-lg">
-            <Trophy className="text-yellow-400" size={24} />
+          <div className="p-2 bg-amber-100 dark:bg-golden-yellow/20 rounded-xl border border-amber-200 dark:border-golden-yellow/30 shadow-sm dark:shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+            <Trophy className="text-amber-600 dark:text-golden-yellow" size={24} />
           </div>
-          <h2 className="text-xl font-bold text-white">Leaderboard</h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-wide">LEADERBOARD</h2>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">TOP PILOTS</div>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-slate-400 uppercase tracking-wider">Prize Pot</div>
-          <div className="text-sky-400 font-mono font-bold">{currentPot}</div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-[10px] text-indigo-500 dark:text-neon-cyan uppercase tracking-widest font-bold mb-1">Prize Pot</div>
+            <div className="text-slate-800 dark:text-white font-mono font-bold text-lg dark:drop-shadow-[0_0_5px_rgba(0,240,255,0.5)]">{currentPot}</div>
+          </div>
+          <button
+            onClick={toggleLeaderboardModal}
+            className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors group"
+            title="Expand View"
+          >
+            <Maximize2 className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white transition-colors" />
+          </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex p-1 bg-slate-900/50 rounded-xl mb-4">
+      <div className="flex p-1 bg-slate-100 dark:bg-black/40 rounded-xl mb-4 relative z-10 border border-slate-200 dark:border-white/5">
         {(['daily', 'weekly', 'monthly', 'yearly'] as TimeWindow[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${activeTab === tab
-              ? 'bg-sky-500 text-white shadow-lg'
-              : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+            className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all duration-300 ${activeTab === tab
+              ? 'bg-white dark:bg-neon-cyan text-indigo-600 dark:text-black shadow-sm dark:shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+              : 'text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
               }`}
           >
             {tab}
@@ -127,40 +140,39 @@ export const LeaderboardPanel: React.FC = () => {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-grow">
+      {/* List */}
+      <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-grow relative z-10">
         {loading ? (
-          <div className="text-center text-slate-500 py-8">Loading...</div>
+          <div className="flex items-center justify-center h-full text-indigo-500 dark:text-neon-cyan animate-pulse font-mono text-sm">
+            SCANNING DATABASE...
+          </div>
         ) : data.length === 0 ? (
-          <div className="text-center text-slate-500 py-8 italic">
-            No scores yet for this period.
+          <div className="text-center text-slate-500 py-8 italic text-sm">
+            No flight records found.
           </div>
         ) : (
           data.map((entry) => (
             <div
               key={entry.rank}
-              className="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:bg-slate-800/50 transition-colors group"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:border-indigo-300 dark:hover:border-neon-cyan/50 hover:bg-white/60 dark:hover:bg-white/10 transition-all duration-300 group"
             >
               <div className="flex items-center gap-4">
                 <div className={`
-                    w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm
-                    ${entry.rank === 1 ? 'bg-yellow-500/20 text-yellow-400' :
-                    entry.rank === 2 ? 'bg-slate-300/20 text-slate-300' :
-                      entry.rank === 3 ? 'bg-amber-700/20 text-amber-600' :
-                        'bg-slate-800 text-slate-500'}
-                `}>
+                                    w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm font-mono
+                                    ${entry.rank === 1 ? 'bg-amber-100 dark:bg-golden-yellow text-amber-700 dark:text-black shadow-sm dark:shadow-[0_0_10px_rgba(255,215,0,0.5)]' :
+                    entry.rank === 2 ? 'bg-slate-200 dark:bg-slate-300 text-slate-700 dark:text-black shadow-sm dark:shadow-[0_0_10px_rgba(203,213,225,0.5)]' :
+                      entry.rank === 3 ? 'bg-orange-100 dark:bg-amber-700 text-orange-800 dark:text-white shadow-sm dark:shadow-[0_0_10px_rgba(180,83,9,0.5)]' :
+                        'bg-slate-100 dark:bg-white/5 text-slate-500'}
+                                `}>
                   {entry.rank}
                 </div>
                 <div>
-                  <div className="font-bold text-slate-200 group-hover:text-sky-300 transition-colors">
+                  <div className="font-bold text-slate-700 dark:text-white text-sm group-hover:text-indigo-600 dark:group-hover:text-neon-cyan transition-colors">
                     {entry.name}
                   </div>
-                  {/* <div className="text-xs text-slate-500 flex items-center gap-1">
-                    <Clock size={10} />
-                    {entry.timePlayed}
-                  </div> */}
                 </div>
               </div>
-              <div className="font-mono font-bold text-sky-400">
+              <div className="font-mono font-bold text-indigo-600 dark:text-neon-cyan text-sm dark:drop-shadow-[0_0_5px_rgba(0,240,255,0.3)]">
                 {entry.score.toLocaleString()}
               </div>
             </div>
