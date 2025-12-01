@@ -18,12 +18,15 @@ import { FullLeaderboardModal } from '@/components/leaderboard/FullLeaderboardMo
 import { useGameEconomy } from '@/hooks/useGameEconomy';
 import { UserPen, Pause, Play, LogOut } from 'lucide-react';
 import { useActiveAccount, useDisconnect, useActiveWallet } from "thirdweb/react";
+import { WalletGatewayModal } from '@/components/shop/WalletGatewayModal';
 
 export default function GamePage() {
     const { isPaused, togglePause, setGameOver, resetGame, resetKey, isGameOver, currentScore } = useGameStore();
     const { username, setUsername } = useGameEconomy();
     const [showEndGameModal, setShowEndGameModal] = useState(false);
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [showUsernameModal, setShowUsernameModal] = useState(false);
+    const [showWalletGateway, setShowWalletGateway] = useState(false);
     const account = useActiveAccount();
     const wallet = useActiveWallet();
     const { disconnect } = useDisconnect();
@@ -87,7 +90,11 @@ export default function GamePage() {
         setShowEndGameModal(false);
     };
 
-    const handleLogout = async () => {
+    const handleLogoutClick = () => {
+        setShowLogoutConfirmation(true);
+    };
+
+    const confirmLogout = async () => {
         if (currentScore > 0) {
             await submitScore();
         }
@@ -95,6 +102,7 @@ export default function GamePage() {
         if (wallet) {
             disconnect(wallet);
         }
+        setShowLogoutConfirmation(false);
     };
 
     if (!isMounted) return null; // Prevent hydration mismatch
@@ -119,6 +127,11 @@ export default function GamePage() {
 
             <FullLeaderboardModal />
 
+            <WalletGatewayModal
+                isOpen={showWalletGateway}
+                onClose={() => setShowWalletGateway(false)}
+            />
+
             {showBiometricToast && (
                 <Toast
                     message="Enable FaceID for faster login next time?"
@@ -137,6 +150,7 @@ export default function GamePage() {
 
             {/* Header Controls (Top Right) */}
             <div className="absolute top-4 right-4 flex items-center gap-3 z-50">
+                <ThemeToggle />
                 {account && (
                     <button
                         onClick={() => setShowUsernameModal(true)}
@@ -154,7 +168,7 @@ export default function GamePage() {
                 </button>
                 {account && (
                     <button
-                        onClick={handleLogout}
+                        onClick={handleLogoutClick}
                         className="p-3 glass-panel-cosmic rounded-full hover:bg-red-500/20 transition-colors text-white hover:text-red-400"
                         title="Log Out & Save"
                     >
@@ -211,7 +225,7 @@ export default function GamePage() {
                 {/* Right Column: Shop & Next */}
                 <div className="hidden lg:flex flex-col gap-4 h-full animate-in slide-in-from-right duration-700">
                     <NextOrbPanel />
-                    <ShopPanel />
+                    <ShopPanel onOpenWalletGateway={() => setShowWalletGateway(true)} />
                     <div className="flex-1 min-h-0">
                         <EvolutionCircle />
                     </div>
@@ -227,6 +241,17 @@ export default function GamePage() {
                 isDestructive={true}
                 onConfirm={confirmEndGame}
                 onCancel={() => setShowEndGameModal(false)}
+            />
+
+            <ConfirmationModal
+                isOpen={showLogoutConfirmation}
+                title="LOG OUT?"
+                message="Are you sure you want to log out? Your current score will be saved."
+                confirmText="LOG OUT"
+                cancelText="CANCEL"
+                isDestructive={false}
+                onConfirm={confirmLogout}
+                onCancel={() => setShowLogoutConfirmation(false)}
             />
         </main>
     );

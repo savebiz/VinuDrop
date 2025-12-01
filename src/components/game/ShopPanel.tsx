@@ -5,7 +5,6 @@ import { useGameEconomy } from '@/hooks/useGameEconomy';
 import { ConnectButton, useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { prepareTransaction, toWei } from "thirdweb";
 import { client, vinuChain as chain } from '@/lib/thirdweb';
-import { WalletGatewayModal } from '@/components/shop/WalletGatewayModal';
 
 // Treasury & Economy Configuration
 const TREASURY_ADDRESS = "0x9d754Ffd84c5A8925FEad37bf7B1Fd4FbA40f48e";
@@ -21,14 +20,17 @@ const SPLIT_CONFIG = {
 
 const GAS_BUFFER = 0.01; // VC buffer for gas fees
 
-export const ShopPanel: React.FC = () => {
+interface ShopPanelProps {
+    onOpenWalletGateway: () => void;
+}
+
+export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => {
     const { currentScore, isGameOver, targetingMode, setTargetingMode } = useGameStore();
     const { freeShakes, freeBlasts, extraShakes, extraBlasts, useShake, addExtraShakes, useBlast, addExtraBlasts, checkDailyRewards, syncWithDb, balance } = useGameEconomy();
     const account = useActiveAccount();
 
     const { mutate: sendTransaction, isPending } = useSendTransaction();
     const [purchasingItem, setPurchasingItem] = useState<string | null>(null);
-    const [showWalletGateway, setShowWalletGateway] = useState(false);
 
     useEffect(() => {
         checkDailyRewards();
@@ -46,7 +48,7 @@ export const ShopPanel: React.FC = () => {
         // Check for insufficient funds locally before trying transaction
         // Include a small buffer for gas to prevent "Insufficient funds" error from wallet
         if (balance && parseFloat(balance) < (parseFloat(cost) + GAS_BUFFER)) {
-            setShowWalletGateway(true);
+            onOpenWalletGateway();
             return;
         }
 
@@ -162,7 +164,7 @@ export const ShopPanel: React.FC = () => {
                     {/* Top Up Button */}
                     {account && (
                         <button
-                            onClick={() => setShowWalletGateway(true)}
+                            onClick={onOpenWalletGateway}
                             className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95"
                             title="Add Funds"
                         >
@@ -231,8 +233,8 @@ export const ShopPanel: React.FC = () => {
                             disabled={!canAffordShake || isGameOver}
                             onClick={useShake}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${canAffordShake
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 active:scale-95'
-                                    : 'bg-white/5 text-slate-500 cursor-not-allowed'
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 active:scale-95'
+                                : 'bg-white/5 text-slate-500 cursor-not-allowed'
                                 }`}
                         >
                             {freeShakes > 0 ? `${freeShakes} Left` : `${extraShakes} Left`}
@@ -255,10 +257,10 @@ export const ShopPanel: React.FC = () => {
                                 }
                             }}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${canAffordBlast
-                                    ? targetingMode
-                                        ? 'bg-red-500 text-white animate-pulse'
-                                        : 'bg-red-600 text-white hover:bg-red-500 shadow-lg shadow-red-500/30 active:scale-95'
-                                    : 'bg-white/5 text-slate-500 cursor-not-allowed'
+                                ? targetingMode
+                                    ? 'bg-red-500 text-white animate-pulse'
+                                    : 'bg-red-600 text-white hover:bg-red-500 shadow-lg shadow-red-500/30 active:scale-95'
+                                : 'bg-white/5 text-slate-500 cursor-not-allowed'
                                 }`}
                         >
                             {targetingMode ? 'CANCEL' : (freeBlasts > 0 ? `${freeBlasts} Left` : `${extraBlasts} Left`)}
@@ -266,11 +268,6 @@ export const ShopPanel: React.FC = () => {
                     </div>
                 </div>
             </div>
-
-            <WalletGatewayModal
-                isOpen={showWalletGateway}
-                onClose={() => setShowWalletGateway(false)}
-            />
         </div>
     );
 };
