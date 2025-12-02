@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Calendar, Globe, Maximize2 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
 import { useGameStore } from '@/store/gameStore';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 interface LeaderboardEntry {
   rank: number;
@@ -25,84 +19,26 @@ export const LeaderboardPanel: React.FC = () => {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      if (!supabase) return;
       setLoading(true);
+      try {
+        const response = await fetch(`/api/leaderboard?timeWindow=${activeTab}&limit=10`);
+        const result = await response.json();
 
-      // Determine time range
-      const now = new Date();
-      let startTime = new Date();
-
-      if (activeTab === 'daily') startTime.setHours(0, 0, 0, 0);
-      else if (activeTab === 'weekly') startTime.setDate(now.getDate() - 7);
-      else if (activeTab === 'monthly') startTime.setMonth(now.getMonth() - 1);
-      else if (activeTab === 'yearly') startTime.setFullYear(now.getFullYear() - 1);
-
-      const { data: scores, error } = await supabase
-        .from('scores')
-        .select('*')
-        .gte('created_at', startTime.toISOString())
-        .order('score', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error("Error fetching leaderboard:", error);
-      } else if (scores) {
-        // Fetch usernames for these wallets
-        const walletAddresses = scores.map(s => s.wallet_address).filter(Boolean);
-        let userMap: Record<string, string> = {};
-
-        if (walletAddresses.length > 0) {
-          const { data: users } = await supabase
-            .from('users')
-            .select('wallet_address, username')
-            .in('wallet_address', walletAddresses);
-
-          if (users) {
-            users.forEach(u => {
-              if (u.username) userMap[u.wallet_address] = u.username;
-            });
-          }
+        if (result.data) {
+          setData(result.data);
         }
-
-        const formattedData = scores.map((s, index) => {
-          // Prefer username from users table, then score table, then fallback
-          let displayName = userMap[s.wallet_address] || s.player_name;
-
-          if (!displayName || displayName === "Player" || displayName === "Unknown") {
-            // Fallback to abbreviated wallet
-            if (s.wallet_address) {
-              displayName = `${s.wallet_address.slice(0, 4)}...${s.wallet_address.slice(-4)}`;
-            } else {
-              displayName = "Unknown";
-            }
-          }
-          return {
-            rank: index + 1,
-            name: displayName,
-            score: s.score,
-            timePlayed: "-"
-          };
-        });
-        setData(formattedData);
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchLeaderboard();
 
-    // Subscribe to changes for real-time updates
-    if (supabase) {
-      const channel = supabase
-        .channel('public:scores')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scores' }, () => {
-          fetchLeaderboard();
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchLeaderboard, 30000);
+    return () => clearInterval(interval);
 
   }, [activeTab]);
 

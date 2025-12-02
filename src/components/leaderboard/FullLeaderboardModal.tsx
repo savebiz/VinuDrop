@@ -28,35 +28,22 @@ export const FullLeaderboardModal: React.FC = () => {
 
     // Fetch Leaderboard Data
     useEffect(() => {
-        if (!isLeaderboardModalOpen || !supabase) return;
+        if (!isLeaderboardModalOpen) return;
 
         const fetchLeaderboard = async () => {
             setLoading(true);
-            const now = new Date();
-            let startTime = new Date();
+            try {
+                const response = await fetch(`/api/leaderboard?timeWindow=${activeTab}&limit=30`);
+                const result = await response.json();
 
-            if (activeTab === 'daily') startTime.setHours(0, 0, 0, 0);
-            else if (activeTab === 'weekly') startTime.setDate(now.getDate() - 7);
-            else if (activeTab === 'monthly') startTime.setMonth(now.getMonth() - 1);
-            else if (activeTab === 'yearly') startTime.setFullYear(now.getFullYear() - 1);
-
-            const { data: scores, error } = await supabase
-                .from('scores')
-                .select('*')
-                .gte('created_at', startTime.toISOString())
-                .order('score', { ascending: false })
-                .limit(30);
-
-            if (scores) {
-                const formatted = scores.map((s, i) => ({
-                    rank: i + 1,
-                    name: s.player_name || 'Unknown',
-                    score: s.score,
-                    wallet: s.wallet_address || ''
-                }));
-                setLeaderboardData(formatted);
+                if (result.data) {
+                    setLeaderboardData(result.data);
+                }
+            } catch (error) {
+                console.error("Error fetching full leaderboard:", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchLeaderboard();

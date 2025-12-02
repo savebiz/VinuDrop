@@ -124,7 +124,8 @@ export const WalletGatewayModal: React.FC<WalletGatewayModalProps> = ({ isOpen, 
                                         prefillBuy: {
                                             token: {
                                                 symbol: "VC",
-                                                address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" // Native Token Address
+                                                address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // Native Token Address
+                                                name: "VinuChain",
                                             },
                                             chain: defineChain(207),
                                             allowEdits: { chain: false, token: false, amount: false }
