@@ -494,7 +494,7 @@ export const VinuPhysics: React.FC = () => {
                                 }}
                                 className="arcade-button px-8 py-4 bg-indigo-500 dark:bg-neon-cyan hover:bg-indigo-400 dark:hover:bg-cyan-400 text-white dark:text-black rounded-xl font-black transition-all shadow-lg dark:shadow-[0_0_30px_rgba(0,240,255,0.4)] text-lg"
                             >
-                                REDEPLOY
+                                PLAY AGAIN
                             </button>
                         </div>
                     </div>

@@ -98,8 +98,7 @@ export const useGameStore = create<GameState>()(
                 elapsedTime: 0,
                 startTime: Date.now(),
                 isPlaying: true,
-                savedBoardState: [],
-                resetKey: state.resetKey + 1
+                resetKey: state.resetKey + 1, // Force remount of physics engine
             })),
 
             addScore: (points, level) => set((state) => {

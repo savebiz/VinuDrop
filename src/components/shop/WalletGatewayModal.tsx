@@ -128,7 +128,7 @@ export const WalletGatewayModal: React.FC<WalletGatewayModalProps> = ({ isOpen, 
                                                 name: "VinuChain",
                                             },
                                             chain: defineChain(207),
-                                            allowEdits: { chain: false, token: false, amount: false }
+                                            allowEdits: { chain: true, token: true, amount: false }
                                         }
                                     }}
                                     theme={mounted && resolvedTheme === 'dark' ? "dark" : "light"}
