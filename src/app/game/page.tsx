@@ -121,7 +121,7 @@ export default function GamePage() {
             <UsernameModal
                 isOpen={showUsernameModal}
                 currentName={username || ''}
-                onSave={setUsername}
+                onSave={(name) => setUsername(name, account?.address)}
                 onClose={() => setShowUsernameModal(false)}
             />
 

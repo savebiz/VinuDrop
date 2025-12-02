@@ -26,7 +26,7 @@ interface EconomyState {
     useFreeBlast: () => boolean; // Deprecated, kept for compatibility if needed, but useBlast is preferred
     checkDailyRewards: () => void;
     syncWithDb: (walletAddress: string) => Promise<void>;
-    setUsername: (name: string) => void;
+    setUsername: (name: string, walletAddress?: string) => void;
 }
 
 export const useGameEconomy = create<EconomyState>()(
@@ -175,7 +175,20 @@ export const useGameEconomy = create<EconomyState>()(
                     });
                 }
             },
-            setUsername: (name: string) => set({ username: name }),
+            setUsername: async (name: string, walletAddress?: string) => {
+                set({ username: name });
+                if (walletAddress && supabase) {
+                    try {
+                        await supabase.from('users').upsert({
+                            wallet_address: walletAddress,
+                            username: name,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'wallet_address' });
+                    } catch (e) {
+                        console.error("Failed to persist username:", e);
+                    }
+                }
+            },
         }),
         {
             name: 'vinudrop-economy',

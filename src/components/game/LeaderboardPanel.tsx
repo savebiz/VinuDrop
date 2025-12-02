@@ -47,8 +47,27 @@ export const LeaderboardPanel: React.FC = () => {
       if (error) {
         console.error("Error fetching leaderboard:", error);
       } else if (scores) {
+        // Fetch usernames for these wallets
+        const walletAddresses = scores.map(s => s.wallet_address).filter(Boolean);
+        let userMap: Record<string, string> = {};
+
+        if (walletAddresses.length > 0) {
+          const { data: users } = await supabase
+            .from('users')
+            .select('wallet_address, username')
+            .in('wallet_address', walletAddresses);
+
+          if (users) {
+            users.forEach(u => {
+              if (u.username) userMap[u.wallet_address] = u.username;
+            });
+          }
+        }
+
         const formattedData = scores.map((s, index) => {
-          let displayName = s.player_name;
+          // Prefer username from users table, then score table, then fallback
+          let displayName = userMap[s.wallet_address] || s.player_name;
+
           if (!displayName || displayName === "Player" || displayName === "Unknown") {
             // Fallback to abbreviated wallet
             if (s.wallet_address) {
