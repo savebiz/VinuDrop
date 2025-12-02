@@ -151,8 +151,13 @@ export const VinuPhysics: React.FC = () => {
 
         // Load saved state if available
         const savedState = useGameStore.getState().savedBoardState;
+        console.log("VinuPhysics Effect: resetKey", resetKey, "savedState length:", savedState?.length);
+
         if (savedState && savedState.length > 0) {
+            console.log("Loading saved state...");
             loadGameState(world);
+        } else {
+            console.log("Starting fresh game.");
         }
 
         // Collision Logic (Merging)

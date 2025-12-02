@@ -88,19 +88,22 @@ export const useGameStore = create<GameState>()(
 
             setLastMerged: (level) => set({ lastMergedLevel: level }),
 
-            resetGame: () => set((state) => ({
-                currentScore: 0,
-                currentOrbLevel: 1,
-                nextOrbLevel: 1,
-                isGameOver: false,
-                highestOrbLevel: 1,
-                lastMergedLevel: 0,
-                elapsedTime: 0,
-                startTime: Date.now(),
-                isPlaying: true,
-                resetKey: state.resetKey + 1, // Force remount of physics engine
-                savedBoardState: [], // Clear saved state
-            })),
+            resetGame: () => set((state) => {
+                console.log("RESET GAME ACTION CALLED");
+                return {
+                    currentScore: 0,
+                    currentOrbLevel: 1,
+                    nextOrbLevel: 1,
+                    isGameOver: false,
+                    highestOrbLevel: 1,
+                    lastMergedLevel: 0,
+                    elapsedTime: 0,
+                    startTime: Date.now(),
+                    isPlaying: true,
+                    resetKey: state.resetKey + 1, // Force remount of physics engine
+                    savedBoardState: [], // Clear saved state
+                };
+            }),
 
             addScore: (points, level) => set((state) => {
                 const newScore = state.currentScore + points;
