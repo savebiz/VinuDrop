@@ -15,11 +15,16 @@ interface WalletGatewayModalProps {
 
 export const WalletGatewayModal: React.FC<WalletGatewayModalProps> = ({ isOpen, onClose }) => {
     const { resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const [activeTab, setActiveTab] = useState<'fiat' | 'crypto'>('fiat');
     const account = useActiveAccount();
     const { balance, syncWithDb } = useGameEconomy();
     const [initialBalance, setInitialBalance] = useState<string>('0');
     const [copied, setCopied] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Track balance to auto-close on success
     useEffect(() => {
@@ -125,7 +130,7 @@ export const WalletGatewayModal: React.FC<WalletGatewayModalProps> = ({ isOpen, 
                                             allowEdits: { chain: false, token: false, amount: false }
                                         }
                                     }}
-                                    theme={resolvedTheme === 'dark' ? "dark" : "light"}
+                                    theme={mounted && resolvedTheme === 'dark' ? "dark" : "light"}
                                 />
                             </motion.div>
                         ) : (
