@@ -17,7 +17,8 @@ export const VinuPhysics: React.FC = () => {
         targetingMode,
         setTargetingMode,
         saveGameState,
-        loadGameState
+        loadGameState,
+        resetKey
     } = useGameStore();
 
     const { useBlast } = useGameEconomy();
@@ -288,7 +289,7 @@ export const VinuPhysics: React.FC = () => {
             World.clear(world, false);
             Engine.clear(engine);
         };
-    }, [setGameOver, addScore, nextTurn, saveGameState, loadGameState, useGameStore]);
+    }, [setGameOver, addScore, nextTurn, saveGameState, loadGameState, useGameStore, resetKey]);
 
     // Mouse Control
     const handleMouseMove = (e: React.MouseEvent) => {
