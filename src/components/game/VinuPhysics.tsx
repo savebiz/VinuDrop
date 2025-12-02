@@ -43,6 +43,8 @@ export const VinuPhysics: React.FC = () => {
         };
     }, [handleSaveState]);
 
+    const runnerRef = useRef<Matter.Runner | null>(null);
+
     useEffect(() => {
         if (!sceneRef.current) return;
 
@@ -244,7 +246,9 @@ export const VinuPhysics: React.FC = () => {
             }
         });
 
-        Runner.run(Runner.create(), engine);
+        const runner = Runner.create();
+        runnerRef.current = runner;
+        Runner.run(runner, engine);
         Render.run(render);
 
         // Power-Up Listeners
@@ -284,12 +288,14 @@ export const VinuPhysics: React.FC = () => {
             window.removeEventListener('powerup-shake', onShake);
             window.removeEventListener('powerup-revive', onRevive);
             Render.stop(render);
-            // Runner.stop(runner); // Runner is local
+            if (runnerRef.current) {
+                Runner.stop(runnerRef.current);
+            }
             if (render.canvas) render.canvas.remove();
             World.clear(world, false);
             Engine.clear(engine);
         };
-    }, [setGameOver, addScore, nextTurn, saveGameState, loadGameState, useGameStore, resetKey]);
+    }, [setGameOver, addScore, nextTurn, saveGameState, loadGameState, resetKey]);
 
     // Mouse Control
     const handleMouseMove = (e: React.MouseEvent) => {
