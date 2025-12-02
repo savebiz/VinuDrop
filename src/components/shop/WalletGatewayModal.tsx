@@ -6,6 +6,7 @@ import { client } from '@/lib/thirdweb';
 import { defineChain } from "thirdweb";
 import QRCode from "react-qr-code";
 import { useGameEconomy } from '@/hooks/useGameEconomy';
+import { useTheme } from 'next-themes';
 
 interface WalletGatewayModalProps {
     isOpen: boolean;
@@ -13,6 +14,7 @@ interface WalletGatewayModalProps {
 }
 
 export const WalletGatewayModal: React.FC<WalletGatewayModalProps> = ({ isOpen, onClose }) => {
+    const { resolvedTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<'fiat' | 'crypto'>('fiat');
     const account = useActiveAccount();
     const { balance, syncWithDb } = useGameEconomy();
@@ -123,7 +125,7 @@ export const WalletGatewayModal: React.FC<WalletGatewayModalProps> = ({ isOpen, 
                                             allowEdits: { chain: false, token: false, amount: false }
                                         }
                                     }}
-                                    theme="dark"
+                                    theme={resolvedTheme === 'dark' ? "dark" : "light"}
                                 />
                             </motion.div>
                         ) : (

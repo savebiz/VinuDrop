@@ -62,6 +62,85 @@ export const VinuPhysics: React.FC = () => {
             }
         });
 
+        // Custom Render Loop for Polished Orbs
+        Events.on(render, 'afterRender', () => {
+            const context = render.context;
+            const bodies = Composite.allBodies(engine.world);
+
+            context.beginPath();
+
+            bodies.forEach((body) => {
+                if (body.label.startsWith('orb-')) {
+                    const level = parseInt(body.label.split('-')[1]);
+                    const orbData = ORBS.find(o => o.level === level);
+
+                    if (orbData && body.render.visible !== false) {
+                        const { x, y } = body.position;
+                        // @ts-ignore - circleRadius exists on circle bodies
+                        const radius = body.circleRadius || 20; // Fallback to avoid undefined
+
+                        // Create Radial Gradient
+                        // Light source from top-left (x - radius * 0.3, y - radius * 0.3)
+                        const gradient = context.createRadialGradient(
+                            x - radius * 0.3,
+                            y - radius * 0.3,
+                            radius * 0.1,
+                            x,
+                            y,
+                            radius
+                        );
+
+                        // Parse color to get lighter/darker variants if needed, 
+                        // but for now we can simulate it by mixing white/black or just using the base color
+                        // A simple trick is to use white at the center highlight and the orb color at the edge
+
+                        gradient.addColorStop(0, '#FFFFFF'); // Highlight
+                        gradient.addColorStop(0.2, orbData.color); // Base Color
+                        gradient.addColorStop(1, '#000000'); // Shadow at edge (darker)
+
+                        // Actually, let's do a better "marble" look
+                        // We need the hex color. ORBS has hex.
+
+                        // Let's try a simpler gradient that preserves the color better
+                        // 0% -> Lighter version of color
+                        // 100% -> The color itself
+
+                        // Since we don't have a color manipulator handy, let's use the provided color as the mid-tone
+                        // and white for highlight.
+
+                        const g = context.createRadialGradient(
+                            x - radius * 0.3, y - radius * 0.3, 0,
+                            x, y, radius
+                        );
+                        g.addColorStop(0, 'rgba(255,255,255,0.8)');
+                        g.addColorStop(0.2, orbData.color);
+                        g.addColorStop(1, 'rgba(0,0,0,0.3)'); // Darker edge
+
+                        context.fillStyle = g;
+
+                        // Draw the circle
+                        context.beginPath();
+                        context.arc(x, y, radius, 0, 2 * Math.PI);
+                        context.fill();
+
+                        // Inner Glow / Shine
+                        context.shadowColor = "white";
+                        context.shadowBlur = 10;
+                        context.shadowOffsetX = 0;
+                        context.shadowOffsetY = 0;
+
+                        // Reset shadow for next
+                        context.shadowBlur = 0;
+
+                        // Border/Stroke (optional, for definition)
+                        context.lineWidth = 1;
+                        context.strokeStyle = "rgba(255,255,255,0.3)";
+                        context.stroke();
+                    }
+                }
+            });
+        });
+
         // Boundaries (Invisible but thicker for physics)
         const ground = Bodies.rectangle(GAME_WIDTH / 2, GAME_HEIGHT + 50, GAME_WIDTH, 100, { isStatic: true, render: { visible: false } });
         const leftWall = Bodies.rectangle(-WALL_THICKNESS / 2, GAME_HEIGHT / 2, WALL_THICKNESS, GAME_HEIGHT * 2, { isStatic: true, render: { visible: false } });

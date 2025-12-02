@@ -14,7 +14,7 @@ export const EvolutionCircle: React.FC = () => {
 
             <div className="relative w-[300px] h-[300px] z-10">
                 <svg width="300" height="300" className="absolute top-0 left-0 pointer-events-none">
-                    <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" strokeDasharray="4 4" />
+                    <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="6 6" />
                 </svg>
 
                 {ORBS.map((orb, index) => {
@@ -24,11 +24,12 @@ export const EvolutionCircle: React.FC = () => {
 
                     const isReached = orb.level <= highestOrbLevel;
                     const isJustMerged = lastMergedLevel === orb.level;
+                    const isHighest = orb.level === highestOrbLevel;
 
                     return (
                         <motion.div
                             key={orb.level}
-                            className="absolute flex items-center justify-center rounded-full transition-all duration-500"
+                            className={`absolute flex items-center justify-center rounded-full transition-all duration-500 ${isHighest ? 'animate-pulse' : ''}`}
                             style={{
                                 left: x,
                                 top: y,
@@ -42,16 +43,16 @@ export const EvolutionCircle: React.FC = () => {
                                 boxShadow: isJustMerged
                                     ? `0 0 20px 5px ${orb.color}`
                                     : isReached
-                                        ? `0 0 5px ${orb.color}`
+                                        ? `0 0 10px ${orb.color}`
                                         : 'none',
                                 border: isJustMerged
                                     ? '2px solid white'
                                     : isReached
-                                        ? '1px solid rgba(255,255,255,0.2)'
+                                        ? '1px solid rgba(255,255,255,0.5)'
                                         : '1px solid rgba(255,255,255,0.05)'
                             }}
                             animate={{
-                                scale: isJustMerged ? 1.5 : 1,
+                                scale: isJustMerged ? 1.5 : (isHighest ? 1.2 : 1),
                             }}
                             transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >

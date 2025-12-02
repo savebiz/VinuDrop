@@ -63,17 +63,34 @@ body {
   }
 
   .reactor-core {
-    @apply backdrop-blur-sm border-x-4 border-b-4 transition-colors duration-300;
-    @apply border-slate-300 bg-slate-100/50 shadow-inner;
+    @apply backdrop-blur-sm border-x-[6px] border-b-[6px] transition-colors duration-300;
+    @apply border-slate-200/50 bg-slate-100/50;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.05);
     @apply dark:border-white/20 dark:bg-transparent dark:shadow-none;
 
     /* Light mode specific background */
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+    position: relative;
+  }
+
+  /* Reflection Overlay */
+  .reactor-core::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+    pointer-events: none;
+    border-radius: 0 0 3.5rem 3.5rem;
+    /* Match rounded-b-[4rem] roughly minus border */
   }
 
   :is(.dark .reactor-core) {
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
     box-shadow: 0 0 50px rgba(0, 240, 255, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05);
+  }
+
+  :is(.dark .reactor-core)::after {
+    display: none;
   }
 
   .text-neon {
