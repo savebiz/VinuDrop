@@ -62,7 +62,7 @@ export const VinuPhysics: React.FC = () => {
             }
         });
 
-        // Custom Render Loop for Polished Orbs
+        // Custom Render Loop for Cosmic Orbs
         Events.on(render, 'afterRender', () => {
             const context = render.context;
             if (!context) return;
@@ -70,7 +70,6 @@ export const VinuPhysics: React.FC = () => {
             const bodies = Composite.allBodies(engine.world);
 
             context.save();
-            context.beginPath();
 
             try {
                 bodies.forEach((body) => {
@@ -80,38 +79,56 @@ export const VinuPhysics: React.FC = () => {
 
                         if (orbData && body.render.visible !== false) {
                             const { x, y } = body.position;
-                            // @ts-ignore - circleRadius exists on circle bodies
-                            const radius = body.circleRadius || 20; // Fallback to avoid undefined
+                            // @ts-ignore
+                            const radius = body.circleRadius || 20;
 
-                            // Create Radial Gradient
+                            // 1. Base Glow (Outer Halo)
+                            const glow = context.createRadialGradient(x, y, radius * 0.8, x, y, radius * 1.5);
+                            glow.addColorStop(0, orbData.color);
+                            glow.addColorStop(1, 'transparent');
+                            context.fillStyle = glow;
+                            context.globalAlpha = 0.3;
+                            context.beginPath();
+                            context.arc(x, y, radius * 1.5, 0, 2 * Math.PI);
+                            context.fill();
+                            context.globalAlpha = 1;
+
+                            // 2. Main Sphere Body (Glassy Gradient)
                             const g = context.createRadialGradient(
                                 x - radius * 0.3, y - radius * 0.3, 0,
                                 x, y, radius
                             );
-                            g.addColorStop(0, 'rgba(255,255,255,0.8)');
-                            g.addColorStop(0.2, orbData.color);
-                            g.addColorStop(1, 'rgba(0,0,0,0.3)'); // Darker edge
+                            g.addColorStop(0, 'rgba(255,255,255,0.9)'); // Bright highlight center
+                            g.addColorStop(0.2, orbData.color); // Main color
+                            g.addColorStop(0.8, orbData.color); // Deep color
+                            g.addColorStop(1, 'rgba(0,0,0,0.8)'); // Dark edge
 
                             context.fillStyle = g;
-
-                            // Draw the circle
                             context.beginPath();
                             context.arc(x, y, radius, 0, 2 * Math.PI);
                             context.fill();
 
-                            // Inner Glow / Shine
-                            context.shadowColor = "white";
-                            context.shadowBlur = 10;
-                            context.shadowOffsetX = 0;
-                            context.shadowOffsetY = 0;
+                            // 3. Specular Highlight (The "Gloss")
+                            context.beginPath();
+                            context.ellipse(x - radius * 0.3, y - radius * 0.3, radius * 0.4, radius * 0.25, Math.PI / 4, 0, 2 * Math.PI);
+                            context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                            context.fill();
 
-                            // Reset shadow for next
-                            context.shadowBlur = 0;
-
-                            // Border/Stroke (optional, for definition)
-                            context.lineWidth = 1;
-                            context.strokeStyle = "rgba(255,255,255,0.3)";
+                            // 4. Rim Light (Bottom reflection)
+                            context.beginPath();
+                            context.arc(x, y, radius * 0.9, 0.5 * Math.PI, 2.5 * Math.PI); // Bottom arc
+                            context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                            context.lineWidth = 2;
                             context.stroke();
+
+                            // 5. Inner Light / Core
+                            context.shadowColor = orbData.color;
+                            context.shadowBlur = 15;
+                            context.fillStyle = 'rgba(255,255,255,0.2)';
+                            context.beginPath();
+                            context.arc(x, y, radius * 0.5, 0, 2 * Math.PI);
+                            context.fill();
+                            context.shadowBlur = 0;
                         }
                     }
                 });
@@ -404,14 +421,14 @@ export const VinuPhysics: React.FC = () => {
     return (
         <div className="relative mx-auto" style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}>
             {/* Flash Effect */}
-            {flash && <div className="absolute inset-0 bg-white/20 z-50 pointer-events-none animate-out fade-out duration-100" />}
+            {flash && <div className="absolute inset-0 bg-white/30 z-50 pointer-events-none animate-out fade-out duration-100" />}
 
             {/* Shockwaves */}
             {
                 shockwaves.map(sw => (
                     <div
                         key={sw.id}
-                        className="absolute rounded-full border-2 pointer-events-none animate-ping"
+                        className="absolute rounded-full border-4 pointer-events-none animate-ping"
                         style={{
                             left: sw.x,
                             top: sw.y,
@@ -420,53 +437,85 @@ export const VinuPhysics: React.FC = () => {
                             marginLeft: -50,
                             marginTop: -50,
                             borderColor: sw.color,
-                            opacity: 0
+                            opacity: 0,
+                            boxShadow: `0 0 20px ${sw.color}`
                         }}
                         onAnimationEnd={() => setShockwaves(prev => prev.filter(p => p.id !== sw.id))}
                     />
                 ))
             }
 
-            {/* Glass Container Overlay (Thicker Walls) */}
-            <div className="absolute inset-0 pointer-events-none border-b-[12px] border-l-[12px] border-r-[12px] border-slate-300 dark:border-white/10 rounded-b-[3rem] z-20 shadow-inner dark:shadow-[inset_0_0_30px_rgba(255,255,255,0.05)] backdrop-blur-[2px]">
-                {/* Reflection Highlight */}
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white/20 dark:from-white/5 to-transparent rounded-b-[2.5rem]" />
+            {/* Holographic Container Overlay */}
+            <div className="absolute inset-0 pointer-events-none z-20">
+                {/* Glowing Borders */}
+                <div className="absolute inset-0 border-b-[4px] border-l-[4px] border-r-[4px] border-cyan-500/30 rounded-b-[3rem] shadow-[0_0_30px_rgba(0,240,255,0.2)] backdrop-blur-[1px]"></div>
+
+                {/* Corner Accents */}
+                <div className="absolute bottom-0 left-0 w-16 h-16 border-b-[4px] border-l-[4px] border-cyan-400 rounded-bl-[3rem] shadow-[0_0_20px_rgba(0,240,255,0.5)]"></div>
+                <div className="absolute bottom-0 right-0 w-16 h-16 border-b-[4px] border-r-[4px] border-cyan-400 rounded-br-[3rem] shadow-[0_0_20px_rgba(0,240,255,0.5)]"></div>
+
+                {/* Grid Background Effect */}
+                <div className="absolute inset-0 opacity-10"
+                    style={{
+                        backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.3) 1px, transparent 1px)',
+                        backgroundSize: '40px 40px'
+                    }}
+                />
             </div>
 
-            {/* Danger Zone (Pulsing Laser) */}
+            {/* Drop Guide Laser */}
+            {canDrop && !isGameOver && !targetingMode && (
+                <div
+                    className="absolute top-0 bottom-0 w-[2px] z-0 pointer-events-none transition-all duration-75"
+                    style={{
+                        left: spawnerX,
+                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0))',
+                        boxShadow: '0 0 10px rgba(255,255,255,0.3)'
+                    }}
+                />
+            )}
+
+            {/* Danger Zone (Laser Grid) */}
             <div
-                className="absolute left-0 right-0 h-[2px] z-10 pointer-events-none transition-all duration-300"
+                className="absolute left-0 right-0 h-[4px] z-10 pointer-events-none transition-all duration-300"
                 style={{
                     top: DANGER_HEIGHT,
-                    background: 'linear-gradient(90deg, transparent, var(--danger-color), transparent)',
-                    opacity: danger ? 1 : 0.3,
-                    ['--danger-color' as any]: danger ? (typeof window !== 'undefined' && document.documentElement.classList.contains('dark') ? 'rgba(255, 0, 153, 0.8)' : 'rgba(220, 38, 38, 0.8)') : (typeof window !== 'undefined' && document.documentElement.classList.contains('dark') ? 'rgba(255, 0, 153, 0.2)' : 'rgba(220, 38, 38, 0.2)'),
-                    boxShadow: danger ? '0 0 15px var(--danger-color)' : 'none'
+                    background: danger ? 'rgba(255, 0, 50, 0.8)' : 'rgba(255, 0, 50, 0.1)',
+                    boxShadow: danger ? '0 0 20px rgba(255, 0, 50, 0.8)' : 'none'
                 }}
             >
-                <div className="absolute inset-0 animate-pulse-fast bg-inherit blur-[2px]" />
+                <div className="absolute inset-0 animate-pulse bg-inherit blur-[4px]" />
+                {/* Grid lines below danger line */}
+                {danger && (
+                    <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-red-500/20 to-transparent"
+                        style={{
+                            backgroundImage: 'linear-gradient(90deg, rgba(255,0,0,0.1) 1px, transparent 1px)',
+                            backgroundSize: '20px 100%'
+                        }}
+                    />
+                )}
             </div>
 
             {/* Spawner Visual */}
             <div
-                className="absolute top-4 -ml-6 w-12 h-12 z-30 pointer-events-none transition-transform duration-75"
+                className="absolute top-4 -ml-8 w-16 h-16 z-30 pointer-events-none transition-transform duration-75"
                 style={{ left: spawnerX }}
             >
-                {/* UFO/Claw Icon */}
-                <div className="w-full h-full bg-slate-200 dark:bg-white/10 border border-slate-300 dark:border-white/30 rounded-full shadow-lg dark:shadow-[0_0_20px_rgba(255,255,255,0.2)] backdrop-blur-sm flex items-center justify-center">
-                    <div className="w-2 h-2 bg-indigo-500 dark:bg-neon-cyan rounded-full animate-pulse" />
+                {/* Claw / Emitter */}
+                <div className="w-full h-full relative">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-8 bg-cyan-500/50 shadow-[0_0_10px_rgba(0,240,255,0.5)]"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-4 border-t-2 border-cyan-400 rounded-t-full shadow-[0_0_15px_rgba(0,240,255,0.6)]"></div>
                 </div>
 
                 {/* Current Orb Preview (In Hand) */}
                 {canDrop && !targetingMode && (
                     <div
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-full opacity-90 shadow-lg dark:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-full opacity-90 animate-float"
                         style={{
                             width: ORBS[currentOrbLevel - 1].radius * 2,
                             height: ORBS[currentOrbLevel - 1].radius * 2,
-                            background: ORBS[currentOrbLevel - 1].color,
-                            transform: 'scale(0.8)',
-                            boxShadow: `0 0 15px ${ORBS[currentOrbLevel - 1].color}`
+                            background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), ${ORBS[currentOrbLevel - 1].color})`,
+                            boxShadow: `0 0 20px ${ORBS[currentOrbLevel - 1].color}, inset 0 0 10px rgba(255,255,255,0.5)`
                         }}
                     />
                 )}
@@ -484,15 +533,15 @@ export const VinuPhysics: React.FC = () => {
 
             {
                 isGameOver && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
-                        <div className="text-center p-8 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl">
-                            <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter text-neon-pink">GAME OVER</h2>
-                            <div className="text-2xl text-indigo-600 dark:text-neon-cyan font-mono mb-8 dark:drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]">SCORE: {useGameStore.getState().currentScore.toLocaleString()}</div>
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
+                        <div className="text-center p-8 bg-black/40 border border-red-500/30 rounded-3xl shadow-[0_0_50px_rgba(255,0,50,0.3)]">
+                            <h2 className="text-6xl font-black text-white mb-2 tracking-tighter text-neon-pink drop-shadow-[0_0_15px_rgba(255,0,153,0.8)]">GAME OVER</h2>
+                            <div className="text-3xl text-cyan-400 font-mono mb-8 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]">SCORE: {useGameStore.getState().currentScore.toLocaleString()}</div>
                             <button
                                 onClick={() => {
                                     resetGame();
                                 }}
-                                className="arcade-button px-8 py-4 bg-indigo-500 dark:bg-neon-cyan hover:bg-indigo-400 dark:hover:bg-cyan-400 text-white dark:text-black rounded-xl font-black transition-all shadow-lg dark:shadow-[0_0_30px_rgba(0,240,255,0.4)] text-lg"
+                                className="arcade-button px-10 py-4 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl font-black transition-all shadow-[0_0_30px_rgba(0,240,255,0.6)] text-xl tracking-widest"
                             >
                                 PLAY AGAIN
                             </button>

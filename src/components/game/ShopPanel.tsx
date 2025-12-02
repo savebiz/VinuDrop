@@ -9,7 +9,6 @@ import { client, vinuChain as chain } from '@/lib/thirdweb';
 // Treasury & Economy Configuration
 const TREASURY_ADDRESS = "0x9d754Ffd84c5A8925FEad37bf7B1Fd4FbA40f48e";
 const BURN_ADDRESS = "0x0000000000000000000000000000000000000000";
-// Reward Pool Address (Contract Address or separate wallet) - Placeholder for now
 const REWARD_POOL_ADDRESS = "0x9d754Ffd84c5A8925FEad37bf7B1Fd4FbA40f48e";
 
 const SPLIT_CONFIG = {
@@ -55,21 +54,9 @@ export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => 
         setPurchasingItem(item);
 
         try {
-            // For now, since Treasury is 100%, we just send one transaction.
-            // In the future, if split logic changes, we might need a contract to handle the split 
-            // or send multiple transactions (less ideal due to gas).
-            // Assuming for this phase we just direct funds based on the dominant split or primary receiver.
-
-            // If we strictly follow the request "tweak the split logic... to ensure that in future, I am able to modify accordingly":
-            // We can prepare the transaction target based on the config.
-
             let targetAddress = TREASURY_ADDRESS;
             if (SPLIT_CONFIG.burn === 100) targetAddress = BURN_ADDRESS;
             else if (SPLIT_CONFIG.rewardPool === 100) targetAddress = REWARD_POOL_ADDRESS;
-
-            // NOTE: Real split payment usually requires a smart contract payment gateway. 
-            // For frontend-only logic, we can only easily send to one destination per user action without multiple signatures.
-            // Since the request is 100% to Treasury, this works fine.
 
             const transaction = prepareTransaction({
                 to: targetAddress,
@@ -86,8 +73,6 @@ export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => 
                 },
                 onError: (error) => {
                     console.error("Transaction failed:", error);
-                    // If error suggests insufficient funds (though tricky to detect reliably from generic error), 
-                    // we could open gateway. For now, rely on pre-check.
                     alert("Transaction failed. Please try again.");
                     setPurchasingItem(null);
                 }
@@ -95,6 +80,12 @@ export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => 
         } catch (e) {
             console.error("Error preparing transaction:", e);
             setPurchasingItem(null);
+        }
+    };
+
+    const handleUseShake = () => {
+        if (useShake()) {
+            window.dispatchEvent(new CustomEvent('powerup-shake'));
         }
     };
 
@@ -139,7 +130,7 @@ export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => 
     const canAffordBlast = freeBlasts > 0 || extraBlasts > 0;
 
     return (
-        <div className="glass-panel-cosmic p-6 rounded-3xl w-full flex flex-col relative overflow-hidden">
+        <div className="glass-panel-cosmic p-6 rounded-3xl w-full flex flex-col relative overflow-hidden h-full">
             <div className="flex items-center justify-between mb-6 relative z-10">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-pink-100 dark:bg-hot-pink/20 rounded-xl border border-pink-200 dark:border-hot-pink/30 shadow-sm dark:shadow-[0_0_15px_rgba(255,0,153,0.3)]">
@@ -174,7 +165,7 @@ export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => 
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4 relative z-10">
+            <div className="flex flex-col gap-4 relative z-10 overflow-y-auto pr-2 custom-scrollbar">
                 {/* Connect Wallet Prompt */}
                 {!account && (
                     <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center">
@@ -231,7 +222,7 @@ export const ShopPanel: React.FC<ShopPanelProps> = ({ onOpenWalletGateway }) => 
                         </div>
                         <button
                             disabled={!canAffordShake || isGameOver}
-                            onClick={useShake}
+                            onClick={handleUseShake}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${canAffordShake
                                 ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 active:scale-95'
                                 : 'bg-white/5 text-slate-500 cursor-not-allowed'

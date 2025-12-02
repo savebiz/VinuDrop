@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import { Clock } from 'lucide-react';
 
 export const TimerDisplay: React.FC = () => {
     const { elapsedTime, isPlaying, tickTimer } = useGameStore();
@@ -23,9 +24,12 @@ export const TimerDisplay: React.FC = () => {
     };
 
     return (
-        <div className="text-center mt-4">
-            <h3 className="text-sky-300 text-xs uppercase tracking-widest mb-1">Time</h3>
-            <div className="text-xl font-mono text-slate-200 tabular-nums">
+        <div className="flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-1 opacity-70">
+                <Clock size={12} className="text-cyan-300" />
+                <h3 className="text-cyan-300 text-[10px] uppercase tracking-widest">Mission Time</h3>
+            </div>
+            <div className="text-2xl font-mono text-white tabular-nums tracking-wider drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                 {formatTime(elapsedTime)}
             </div>
         </div>
