@@ -80,6 +80,19 @@ export default function GamePage() {
         }
     }, [isGameOver]);
 
+    // Auto-restart game 3 seconds after Game Over
+    useEffect(() => {
+        if (isGameOver) {
+            console.log('⏱️ Game Over detected - auto-restart in 3 seconds...');
+            const timer = setTimeout(() => {
+                console.log('🔄 Auto-restarting game...');
+                resetGame();
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [isGameOver, resetGame]);
+
     const handleEndGame = () => {
         setShowEndGameModal(true);
     };
@@ -208,24 +221,6 @@ export default function GamePage() {
                                 onResume={togglePause}
                                 onEndGame={handleEndGame}
                             />
-                        )}
-                        {isGameOver && (
-                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
-                                <div className="text-center p-8 bg-black/40 border border-red-500/30 rounded-3xl shadow-[0_0_50px_rgba(255,0,50,0.3)]">
-                                    <h2 className="text-6xl font-black text-white mb-2 tracking-tighter text-neon-pink drop-shadow-[0_0_15px_rgba(255,0,153,0.8)]">GAME OVER</h2>
-                                    <div className="text-3xl text-cyan-400 font-mono mb-8 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]">SCORE: {currentScore.toLocaleString()}</div>
-                                    <button
-                                        onClick={() => {
-                                            console.log('🎮 PLAY AGAIN button clicked');
-                                            resetGame();
-                                        }}
-                                        className="arcade-button px-10 py-4 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl font-black transition-all shadow-[0_0_30px_rgba(0,240,255,0.6)] text-xl tracking-widest"
-                                        type="button"
-                                    >
-                                        PLAY AGAIN
-                                    </button>
-                                </div>
-                            </div>
                         )}
                     </div>
 
