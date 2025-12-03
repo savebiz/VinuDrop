@@ -54,6 +54,29 @@ export const VinuPhysics: React.FC = () => {
         };
     }, [handleSaveState]);
 
+    // CRITICAL: Clear all orbs immediately when resetKey changes
+    useEffect(() => {
+        if (resetKey > 0 && engineRef.current) {
+            console.log('🧹 resetKey changed - clearing orbs immediately');
+            const world = engineRef.current.world;
+            const allBodies = Composite.allBodies(world);
+
+            console.log('Bodies before clear:', allBodies.length);
+
+            // Remove all orbs
+            const orbsToRemove = allBodies.filter(body =>
+                !body.isStatic && body.label.startsWith('orb-')
+            );
+
+            orbsToRemove.forEach(orb => {
+                World.remove(world, orb);
+            });
+
+            console.log('Removed', orbsToRemove.length, 'orbs');
+            console.log('Bodies after clear:', Composite.allBodies(world).length);
+        }
+    }, [resetKey]);
+
     const runnerRef = useRef<Matter.Runner | null>(null);
 
     useEffect(() => {
