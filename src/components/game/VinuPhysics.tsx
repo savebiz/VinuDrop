@@ -554,24 +554,6 @@ export const VinuPhysics: React.FC = () => {
                 className={`absolute inset-0 z-10 ${targetingMode ? 'cursor-crosshair' : 'cursor-none'}`}
             />
 
-            {
-                isGameOver && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
-                        <div className="text-center p-8 bg-black/40 border border-red-500/30 rounded-3xl shadow-[0_0_50px_rgba(255,0,50,0.3)]">
-                            <h2 className="text-6xl font-black text-white mb-2 tracking-tighter text-neon-pink drop-shadow-[0_0_15px_rgba(255,0,153,0.8)]">GAME OVER</h2>
-                            <div className="text-3xl text-cyan-400 font-mono mb-8 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]">SCORE: {useGameStore.getState().currentScore.toLocaleString()}</div>
-                            <button
-                                onClick={() => {
-                                    resetGame();
-                                }}
-                                className="arcade-button px-10 py-4 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl font-black transition-all shadow-[0_0_30px_rgba(0,240,255,0.6)] text-xl tracking-widest"
-                            >
-                                PLAY AGAIN
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
-        </div >
+        </div>
     );
 };
