@@ -35,11 +35,22 @@ export const VinuPhysics: React.FC = () => {
     }, [saveGameState]);
 
     // Save on unmount and page unload
+    // Save on visibility change (tab switch/minimize) and unmount
     useEffect(() => {
-        window.addEventListener('beforeunload', handleSaveState);
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                handleSaveState();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        // Also keep beforeunload for actual page close, but use it sparingly if needed. 
+        // Actually, for modern browsers, visibilitychange is preferred for saving data.
+        // We'll stick to visibilitychange + unmount cleanup.
+
         return () => {
             handleSaveState();
-            window.removeEventListener('beforeunload', handleSaveState);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [handleSaveState]);
 

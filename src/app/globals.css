@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Inter:wght@400..800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-fredoka: 'Fredoka', sans-serif;
-  --font-inter: 'Inter', monospace;
+  --font-fredoka: var(--font-fredoka);
+  --font-inter: var(--font-inter);
 
   --color-cosmic-bg: #0B0B15;
   --color-glass-border: rgba(255, 255, 255, 0.1);
