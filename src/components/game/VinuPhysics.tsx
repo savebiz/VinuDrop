@@ -301,15 +301,39 @@ export const VinuPhysics: React.FC = () => {
         window.addEventListener('powerup-revive', onRevive);
 
         return () => {
+            console.log('🧹 Cleaning up VinuPhysics...');
+
             window.removeEventListener('powerup-shake', onShake);
             window.removeEventListener('powerup-revive', onRevive);
+
+            // CRITICAL: Remove all dynamic bodies (orbs) before clearing world
+            const allBodies = Composite.allBodies(world);
+            console.log('Bodies before cleanup:', allBodies.length);
+
+            // Remove all non-static bodies (the orbs)
+            allBodies.forEach(body => {
+                if (!body.isStatic && body.label.startsWith('orb-')) {
+                    World.remove(world, body);
+                }
+            });
+
+            const remainingBodies = Composite.allBodies(world);
+            console.log('Bodies after orb removal:', remainingBodies.length);
+
+            // Stop rendering and physics
             Render.stop(render);
             if (runnerRef.current) {
                 Runner.stop(runnerRef.current);
             }
+
+            // Remove canvas
             if (render.canvas) render.canvas.remove();
+
+            // Clear world and engine
             World.clear(world, false);
             Engine.clear(engine);
+
+            console.log('✅ VinuPhysics cleanup complete');
         };
     }, [setGameOver, addScore, nextTurn, saveGameState, loadGameState, resetKey]);
 

@@ -89,7 +89,8 @@ export const useGameStore = create<GameState>()(
             setLastMerged: (level) => set({ lastMergedLevel: level }),
 
             resetGame: () => set((state) => {
-                console.log("RESET GAME ACTION CALLED");
+                console.log('🔄 RESET GAME ACTION CALLED');
+                console.log('Current resetKey:', state.resetKey, '→ New:', state.resetKey + 1);
                 return {
                     currentScore: 0,
                     currentOrbLevel: 1,

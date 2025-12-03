@@ -216,9 +216,11 @@ export default function GamePage() {
                                     <div className="text-3xl text-cyan-400 font-mono mb-8 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]">SCORE: {currentScore.toLocaleString()}</div>
                                     <button
                                         onClick={() => {
+                                            console.log('🎮 PLAY AGAIN button clicked');
                                             resetGame();
                                         }}
                                         className="arcade-button px-10 py-4 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl font-black transition-all shadow-[0_0_30px_rgba(0,240,255,0.6)] text-xl tracking-widest"
+                                        type="button"
                                     >
                                         PLAY AGAIN
                                     </button>
